@@ -1,0 +1,13 @@
+name = "StructuredLight"
+uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
+authors = ["Marcos Gil <marcosgildeoliveira@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
