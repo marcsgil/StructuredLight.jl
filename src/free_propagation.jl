@@ -4,7 +4,7 @@ function fourier_propagation_kernel(κ,k,z)
 end
 
 function inner_scalling_phase(r,k,z,scalling)
-    if iszero(z)
+    if iszero(z) || isone(scalling)
         one(z)
     else
         cis( k * ( 1 - scalling ) * sum(abs2,r) / (2z))
@@ -12,7 +12,7 @@ function inner_scalling_phase(r,k,z,scalling)
 end
 
 function outter_scalling_phase(r,k,z,scalling)
-    if iszero(z)
+    if iszero(z) || isone(scalling)
         one(z)
     else
         cis( - k * ( 1 - scalling ) * scalling * sum(abs2,r) / (2z) )
