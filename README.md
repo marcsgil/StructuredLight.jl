@@ -12,7 +12,7 @@ add https://github.com/marcsgil/StructuredLight.jl
 The following code is a minimal working exemple for this package:
 
 ```julia
-using FreeParaxialPropagation #Loads the package
+using StructuredLight #Loads the package
 
 rs = LinRange(-5,5,256) #Define a linear grid of points
 

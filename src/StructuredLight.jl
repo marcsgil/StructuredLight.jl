@@ -10,7 +10,6 @@ export symetric_integer_range,interval,reciprocal_interval,direct_grid,reciproca
 include("steps.jl")
 export dispersion_step!,get_dispersion_phases,evolve_phase
 
-using ParaxialPropagationBasis
 using Images, VideoIO
 @reexport using ColorSchemes
 using ThreadsX

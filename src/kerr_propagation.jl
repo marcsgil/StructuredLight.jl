@@ -52,5 +52,3 @@ function kerr_propagation(ψ₀,xs,ys,zs,total_steps=0;k=1,g=1)
 
     results
 end
-
-end
