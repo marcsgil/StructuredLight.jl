@@ -260,7 +260,7 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVec
 end
 
 function lens(xs,ys,fx,fy;k=1)
-    map(r -> cis( -k * (r[1]^2/fx + r[2]^2/fy) / 2 ), Iterators.product(xs,ys))
+    ThreadsX.map(r -> cis( -k * (r[1]^2/fx + r[2]^2/fy) / 2 ), Iterators.product(xs,ys))
 end
 
 function tilted_lens(xs,ys,f,ϕ;k=1)

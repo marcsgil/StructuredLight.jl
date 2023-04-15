@@ -18,11 +18,11 @@ rs = LinRange(-5,5,256) #Define a linear grid of points
 
 E0 = lg(rs,rs) #Calculates the fundamental Laguerre-Gaussian mode
 
-vizualize(E0) #Vizualizes the mode
+visualise(E0) #visualises the mode
 
 E = free_propagation(E0,rs,rs,1) #Propagates the mode through a distance of z=1
 
-vizualize(E) #Vizualizes the evolved mode
+visualise(E) #visualises the evolved mode
 ```
 
 This ilustrates the basic idea of the package: first, you construct a matrix representing the mode you want to propagate, and then one calls `free_propagation`.
@@ -58,7 +58,7 @@ Here are a few examples:
 ```julia
 rs = LinRange(-5,5,256)
 E0 = lg(rs,rs,.5) # Fundamental mode a distance z=.5 away from focus
-vizualize(E0)
+visualise(E0)
 ```
 
 ```julia

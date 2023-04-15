@@ -18,19 +18,28 @@ function partition(a::Integer,b::Integer)
     result
 end
 
-function kerr_propagation(ψ₀,xs,ys,zs,total_steps=0;k=1,g=1)
-    #solves ∇² ψ + 2ik ∂_z ψ = - g |ψ|² ψ with initial condition ψ₀
+function distribute(N,v)
+    δs = [ v[i] - v[i-1] for i in 2:length(v) ]
 
-    @assert iszero(first(zs))
-
-    if iszero(total_steps) || total_steps < length(zs) - 1
-        total_steps = length(zs)
+    for δ in δs
+        @assert δ ≥ 0 "The points are not in crescent order"
     end
 
-    steps = partition(total_steps,length(zs)-1)
+    Δ = v[end] - v[1]
+    @assert Δ > 0 "The total interval is null"
+
+    result = [ round(Int, N * δs[n] / Δ, RoundUp) for n in 1:length(δs) - 1 ]
+    vcat(result, N - sum(result))
+end
+
+function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
+    #solves ∇² ψ + 2ik ∂_z ψ = - g |ψ|² ψ with initial condition ψ₀
+
+    Zs = vcat(0,zs)
+
+    steps = distribute(total_steps,Zs)
 
     results = similar(ψ₀,size(ψ₀)...,length(zs))
-    results[:,:,1] = ψ₀
 
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
@@ -40,15 +49,19 @@ function kerr_propagation(ψ₀,xs,ys,zs,total_steps=0;k=1,g=1)
     ks = reciprocal_grid(xs,ys) |> collect |> ifftshift
 
     for (i,n) in enumerate(steps)
-        Δz = (zs[i+1] - zs[i])/n
+        Δz = (Zs[i+1] - Zs[i])/n
         phase_evolution_factor = g*Δz/(2k)
 
-        dispersion_phases = get_dispersion_phases(Δz,k,ks,ψ₀)
+        kernel = convert(typeof(ψ₀), fourier_propagation_kernel.(ks,k,Δz))
 
-        type_2A_step!(cache,dispersion_phases,plan,iplan,phase_evolution_factor,n)
+        type_2A_step!(cache,kernel,plan,iplan,phase_evolution_factor,n)
 
-        fftshift!(view(results,:,:,i+1), cache)
+        fftshift!(view(results,:,:,i), cache)
     end
 
-    results
+    if zs isa Number
+        dropdims(results,dims=3)
+    else
+        results
+    end
 end

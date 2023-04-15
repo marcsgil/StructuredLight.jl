@@ -18,8 +18,8 @@ using SpecialFunctions
 include("initial_profiles.jl")
 export lg,hg,diagonal_hg,lens,tilted_lens
 
-include("vizualization.jl")
-export vizualize,show_animation,save_animation
+include("visualization.jl")
+export visualize,show_animation,save_animation
 
 include("free_propagation.jl")
 export free_propagation
