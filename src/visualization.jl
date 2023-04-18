@@ -69,6 +69,24 @@ function visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_fi
     vcat(visualize.( eachslice(Array(ψ),dims=4),colormap=colormap,ratio=ratio,normalize_by_first=normalize_by_first )...)
 end
 
+"""
+    interactive_visualization(ψs::AbstractArray{T,3}; 
+        colormap=:hot,
+        ratio=1,
+        normalize_by_first=false) where T 
+
+Open a window showing an interactive visualization of `ψs`.
+
+The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+
+The image is rescaled by `ratio`.
+
+`normalize_by_first` defines if the intensities should be normalized by the first image.
+"""
+function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
+    imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
+end
+
 function show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
     Images.gif([convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio) for ψ in eachslice(ψs,dims=3)],fps=fps)
 end
