@@ -21,10 +21,6 @@ end
 function distribute(N,v)
     δs = [ v[i] - v[i-1] for i in 2:length(v) ]
 
-    for δ in δs
-        @assert δ ≥ 0 "The points are not in crescent order"
-    end
-
     Δ = v[end] - v[1]
     @assert Δ > 0 "The total interval is null"
 
@@ -32,9 +28,18 @@ function distribute(N,v)
     vcat(result, N - sum(result))
 end
 
-function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
-    #solves ∇² ψ + 2ik ∂_z ψ = - g |ψ|² ψ with initial condition ψ₀
+"""
+    kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
 
+Solve `∇² ψ + 2ik ∂_z ψ = - g |ψ|² ψ` under the initial condition `ψ₀`.
+
+`xs` and `ys` are the grids over which `ψ₀` is calculated.
+
+The outputs are saved at every `zs`, which is a number or a collection of numbers.
+
+`total_steps` is the number of steps over which we discretize the propagation. The larger the `total_steps`, the better the precision and the slower is the calculation.
+"""
+function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
     Zs = vcat(0,zs)
 
     steps = distribute(total_steps,Zs)

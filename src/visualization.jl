@@ -87,6 +87,18 @@ function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=
     imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
 end
 
+
+"""
+    show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
+
+Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on Vscode, but not on Jupyter.
+
+The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+
+The image is rescaled by `ratio`.
+
+`normalize_by_first` defines if the intensities should be normalized by the first image.
+"""
 function show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
     Images.gif([convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio) for ψ in eachslice(ψs,dims=3)],fps=fps)
 end

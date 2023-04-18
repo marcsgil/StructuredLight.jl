@@ -259,10 +259,32 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVec
     ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
 end
 
+"""
+    lens(xs,ys,fx,fy;k=1)
+
+Output an array containing the phase shift introduced by a lens of focal lengths `fx` and `fy`.
+
+The calculation is done over a grid defined by `xs` and `ys`.
+
+`k` is the incident wavenumber.
+
+To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(xs,ys,fx,fy;k=k)`
+"""
 function lens(xs,ys,fx,fy;k=1)
     ThreadsX.map(r -> cis( -k * (r[1]^2/fx + r[2]^2/fy) / 2 ), Iterators.product(xs,ys))
 end
 
+"""
+    tilted_lens(xs,ys,f,ϕ;k=1)
+
+Output an array containing the phase shift introduced by a spherical lens of focal length `f` tilted by an angle `ϕ`.
+
+The calculation is done over a grid defined by `xs` and `ys`.
+
+`k` is the incident wavenumber.
+
+To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* tilted_lens(xs,ys,f,ϕ;k=k)`
+"""
 function tilted_lens(xs,ys,f,ϕ;k=1)
     lens(xs,ys,sec(ϕ)*f,cos(ϕ)*f,k=k)
 end

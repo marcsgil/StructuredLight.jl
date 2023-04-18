@@ -52,6 +52,17 @@ function free_propagation(ψ₀,xs,ys,z;k=1)
     free_propagation(ψ₀,xs,ys,z,k,plan,iplan)
 end
 
+"""
+    free_propagation(ψ₀,xs,ys,z,scalling;k=1)
+
+Propagate an inital profile `ψ₀` over a distance `z`. 
+
+`xs` and `ys` are the grids over which `ψ₀` is calculated.
+
+The output is calculated on a scalled grid defined by `scalling * xs` and `scalling * ys`
+
+`k` is the wavenumber.
+"""
 function free_propagation(ψ₀,xs,ys,z,scalling;k=1)
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
@@ -85,6 +96,17 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
     result
 end
 
+"""
+    free_propagation(ψ₀,xs,ys,zs::AbstractArray,scallings;k=1)
+
+Propagate an inital profile `ψ₀` over every distance in the array `zs`. 
+
+`xs` and `ys` are the grids over which `ψ₀` is calculated.
+
+The output at a distance zs[n] is calculated on a scalled grid defined by `scallings[n] * xs` and `scallings[n] * ys`
+
+`k` is the wavenumber.
+"""
 function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scallings;k=1)
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
