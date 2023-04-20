@@ -10,7 +10,8 @@ include("dft_utils.jl")
 include("steps.jl")
 #export dispersion_step!,get_dispersion_phases,evolve_phase
 
-using Images, VideoIO, ImageView
+using Images, VideoIO
+#using ImageView
 @reexport using ColorSchemes
 using ThreadsX
 using SpecialFunctions
@@ -19,7 +20,7 @@ include("initial_profiles.jl")
 export lg,hg,diagonal_hg,lens,tilted_lens
 
 include("visualization.jl")
-export visualize,interactive_visualization,show_animation,save_animation
+export visualize,show_animation,save_animation
 
 include("free_propagation.jl")
 export free_propagation
