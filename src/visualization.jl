@@ -27,7 +27,7 @@ end
 
 Vizualize the beam described by array `ψ`. 
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
 """
@@ -44,7 +44,7 @@ Vizualize the beam described by array `ψ`.
 
 The third dimension is interpreted as defining different images, which are displayed in a row.
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
 """
@@ -61,7 +61,7 @@ Vizualize the beam described by array `ψ`.
 
 The third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
 """
@@ -77,7 +77,7 @@ end
 
 Open a window showing an interactive visualization of `ψs`.
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
 
@@ -91,9 +91,9 @@ end
 """
     show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
 
-Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on Vscode, but not on Jupyter.
+Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on se, but not on Jupyter.
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
 
@@ -104,16 +104,21 @@ function show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) w
 end
 
 """
-    save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16) where T
+    save_animation(ψs::AbstractArray{T,3}, path; 
+    colormap=:hot,
+    ratio=1,
+    fps=16, 
+    encoder_options = (crf=0, preset="veryslow")) where T
 
 Save an animation of `ψs` at `path` with a framerate of `fps`.
 
-The colors are given by `colormap`. The full catalogue can be found at https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/.
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
+
+Follow the [VideoIO.jl documentation](https://juliaio.github.io/VideoIO.jl/stable/writing/) for more information on `encoder_options`.
 """
-function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16) where T
+function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16, encoder_options = (crf=0, preset="veryslow")) where T
     imgstack = [RGB{N0f8}.(convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)) for ψ in eachslice(ψs,dims=3)]
-    #encoder_options = (crf=23, preset="medium")
-    VideoIO.save(path, imgstack, framerate=fps)
+    VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
 end

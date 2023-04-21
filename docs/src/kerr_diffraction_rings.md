@@ -1,6 +1,6 @@
 # Diffraction Rings in Kerr Media
 
-Here, we reproduce the results of [this work](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the apperence of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
+Here, we reproduce the results of [this work](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
 
 First we import the package, define a function that calculates the nonlinear phase term, and a function that calculates the three images.
 

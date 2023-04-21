@@ -3,3 +3,5 @@
 /docs/build/
 /docs/Manifest.toml
 /.vscode/
+server.jl
+test.jl
