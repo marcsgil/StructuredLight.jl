@@ -19,7 +19,13 @@ end
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
-normalization_lg(;p,l,γ₀=1) = 1/(γ₀*√( oftype(float(γ₀),π)*prod(p+1:p+abs(l))))
+function normalization_lg(;p,l,γ₀=1)
+    try
+        oftype(float(γ₀), √( factorial(p) / factorial(p+abs(l)) / π ) / γ₀ )  
+    catch
+        oftype(float(γ₀), √( factorial(big(p)) / factorial(big(p+abs(l))) / π ) / γ₀ )  
+    end    
+end
 
 
 function core_lg(x,y,α,γ₀,l,coefs)
@@ -29,7 +35,7 @@ end
 
 """
     lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the Laguerre-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
 
@@ -44,14 +50,14 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-    p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert p ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
-    coefs = laguerre_coefficients(p,convert(T,abs(l)))
+    coefs = laguerre_coefficients(p,convert(float(T),abs(l)))
 
     α = 1/(1+im*z/(k*γ₀^2))
     prefactor = normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α))
@@ -61,7 +67,7 @@ end
 
 """
     lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the Laguerre-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
 
@@ -76,20 +82,42 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-    p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert p ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
-    coefs = laguerre_coefficients(p,convert(T,abs(l)))
+    coefs = laguerre_coefficients(p,convert(float(T),abs(l)))
 
     function f(x,y,α)
         normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α)) * core_lg(x,y,α,γ₀,l,coefs)
     end
 
     ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
+end
+
+"""
+    lg(x::Real,y::Real,z::Real=0;
+        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the Laguerre-Gaussian mode at a position (`x`,`y`,`z`).
+
+The optional keyword arguments are:
+
+`p`: radial index
+
+`l`: topological charge
+
+`w0`: beam's waist
+
+`k`: wavenumber
+"""
+function lg(x::Real,y::Real,z::Real=0;
+    p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1)
+
+    first(lg([x],[y],z,p=p,l=l,k=k,w0=w0))
 end
 
 
@@ -113,7 +141,13 @@ hermite(x,n,coefs) = iseven(n) ? evalpoly(4x^2,coefs) : 2x*evalpoly(4x^2,coefs)
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
-normalization_hg(;m,n,γ₀=1) = 1/(γ₀*√( oftype(float(γ₀),π)*2^(m+n)*factorial(n)*factorial(m)))
+function normalization_hg(;m,n,γ₀=1)
+    try
+        oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(n)*factorial(m)))))
+    catch
+        oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(big(n))*factorial(big(m))))))
+    end
+end
 
 function core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,isdiagonal)
     ξ = isdiagonal ? (x+y)/( √2 * γ₀) : x/γ₀
@@ -123,7 +157,7 @@ end
 
 """
     function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
 
@@ -138,13 +172,13 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
     @assert n ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
     x_coefs = hermite_coefficients(m)
     y_coefs = hermite_coefficients(n)
@@ -157,7 +191,7 @@ end
 
 """
     hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
 
@@ -172,13 +206,13 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
     @assert n ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
     x_coefs = hermite_coefficients(m)
     y_coefs = hermite_coefficients(n)
@@ -191,8 +225,30 @@ function hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
 end
 
 """
+    hg(x::Real,y::Real,z::Real=0;
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the Hermite-Gaussian mode at a position (`x`,`y`,`z`).
+
+The optional keyword arguments are:
+
+`m`: horizontal index
+
+`n`: vertical index
+
+`w0`: beam's waist
+
+`k`: wavenumber
+"""
+function hg(x::Real,y::Real,z::Real=0;
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1)
+
+    first(hg([x],[y],z,m=m,n=n,k=k,w0=w0))
+end
+
+"""
     function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the diagonal Hermite-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
 
@@ -207,13 +263,13 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
-    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
     @assert n ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
     x_coefs = hermite_coefficients(m)
     y_coefs = hermite_coefficients(n)
@@ -226,7 +282,7 @@ end
 
 """
     diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
 Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
 
@@ -241,13 +297,13 @@ The optional keyword arguments are:
 `k`: wavenumber
 """
 function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: AbstractFloat
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
     @assert n ≥ 0
 
-    γ₀ = convert(T,w0/√2)
-    k = convert(T,k)
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
 
     x_coefs = hermite_coefficients(m)
     y_coefs = hermite_coefficients(n)
@@ -257,6 +313,28 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVec
     end
 
     ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
+end
+
+"""
+    diagonal_hg(x::Real,y::Real,z::Real=0;
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the diagonal Hermite-Gaussian mode at a position (`x`,`y`,`z`).
+
+The optional keyword arguments are:
+
+`m`: horizontal index
+
+`n`: vertical index
+
+`w0`: beam's waist
+
+`k`: wavenumber
+"""
+function diagonal_hg(x::Real,y::Real,z::Real=0;
+    m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1)
+
+    first(diagonal_hg([x],[y],z,m=m,n=n,k=k,w0=w0))
 end
 
 """
