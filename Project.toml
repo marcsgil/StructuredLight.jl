@@ -4,17 +4,17 @@ authors = ["Marcos Gil <marcosgildeoliveira@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
-ImageView = "86fae568-95e7-573e-a6b2-d8a6b900c9ef"
+FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
-ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VideoIO = "d6d074c3-1acf-5d4c-9a43-ef38773959a2"
+
+[weakdeps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 
 [compat]
 julia = "1"

@@ -28,30 +28,7 @@ visualize(ψ₂)
 visualize(ψ₃)
 ``` 
 
-With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kind of animations. 
-
-## `interactive_visualization`
-
-`interactive_visualization` will open a window displaying the images, which contains a slider that allows one to control the visualization.
-
-```@docs
-interactive_visualization
-```
-
-Example:
-
-```julia
-using StructuredLight
-
-rs = LinRange(-6,6,256) 
-zs = LinRange(0,1,32)
-
-ψ₀ = hg(rs,rs) + hg(rs,rs,n=2)/√2
-
-ψs = free_propagation(ψ₀,rs,rs,zs)
-
-interactive_visualization(ψs)
-```
+ With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kinds of animations. 
 
 ## `show_animation`
 

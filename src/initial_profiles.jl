@@ -62,7 +62,7 @@ function lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = 1/(1+im*z/(k*γ₀^2))
     prefactor = normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α))
 
-    ThreadsX.map(r->prefactor*core_lg(r...,α,γ₀,l,coefs), Iterators.product(xs,ys))
+    @tullio result[i,j] := prefactor*core_lg(xs[i],ys[j],α,γ₀,l,coefs)
 end
 
 """
@@ -95,7 +95,7 @@ function lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
         normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α)) * core_lg(x,y,α,γ₀,l,coefs)
     end
 
-    ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
+    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
 end
 
 """
@@ -186,7 +186,7 @@ function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    ThreadsX.map(r->prefactor*core_hg(r...,α,γ₀,m,n,x_coefs,y_coefs,false), Iterators.product(xs,ys))
+    @tullio result[i,j] := prefactor*core_hg(xs[i],ys[j],α,γ₀,m,n,x_coefs,y_coefs,false)
 end
 
 """
@@ -221,7 +221,7 @@ function hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,false)
     end
 
-    ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
+    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
 end
 
 """
@@ -277,7 +277,7 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    ThreadsX.map(r->prefactor*core_hg(r...,α,γ₀,m,n,x_coefs,y_coefs,true), Iterators.product(xs,ys))
+    @tullio result[i,j] := prefactor*core_hg(xs[i],ys[j],α,γ₀,m,n,x_coefs,y_coefs,true)
 end
 
 """
@@ -312,7 +312,7 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVec
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,true)
     end
 
-    ThreadsX.map(z -> map( rs -> f(rs...,inv(1+im*z/(k*γ₀^2))), Iterators.product(xs,ys) ), zs) |> stack
+    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
 end
 
 """
@@ -349,7 +349,7 @@ The calculation is done over a grid defined by `xs` and `ys`.
 To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(xs,ys,fx,fy;k=k)`
 """
 function lens(xs,ys,fx,fy;k=1)
-    ThreadsX.map(r -> cis( -k * (r[1]^2/fx + r[2]^2/fy) / 2 ), Iterators.product(xs,ys))
+    @tullio result[i,j] := cis( -k * (xs[i]^2/fx + ys[j]^2/fy) / 2 )
 end
 
 """

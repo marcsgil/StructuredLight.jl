@@ -69,29 +69,11 @@ function visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_fi
     vcat(visualize.( eachslice(Array(ψ),dims=4),colormap=colormap,ratio=ratio,normalize_by_first=normalize_by_first )...)
 end
 
-"""
-    interactive_visualization(ψs::AbstractArray{T,3}; 
-        colormap=:hot,
-        ratio=1,
-        normalize_by_first=false) where T 
-
-Open a window showing an interactive visualization of `ψs`.
-
-The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
-
-The image is rescaled by `ratio`.
-
-`normalize_by_first` defines if the intensities should be normalized by the first image.
-"""
-function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
-    imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
-end
-
 
 """
     show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
 
-Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on se, but not on Jupyter.
+Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on VSCode, but not on Jupyter.
 
 The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
@@ -122,3 +104,27 @@ function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps
     imgstack = [RGB{N0f8}.(convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)) for ψ in eachslice(ψs,dims=3)]
     VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
 end
+
+#=
+This functionality depend on ImageView, which gives a weird bug in my PC, when used together with images.
+I'm disabiling it for now.
+
+"""
+    interactive_visualization(ψs::AbstractArray{T,3}; 
+        colormap=:hot,
+        ratio=1,
+        normalize_by_first=false) where T 
+
+Open a window showing an interactive visualization of `ψs`.
+
+The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
+
+The image is rescaled by `ratio`.
+
+`normalize_by_first` defines if the intensities should be normalized by the first image.
+"""
+function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
+    imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
+end
+
+=#

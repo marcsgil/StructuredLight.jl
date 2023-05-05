@@ -33,7 +33,6 @@ function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan,scalling)
 
     kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scalling), reciprocal_grid(xs,ys)) |> ifftshift
     
-
     fftshift(dispersion_step!(cache,kernel,plan,iplan)) .* map_convert(ψ₀, r -> outter_scalling_phase(r,k,z,scalling), direct_grid(xs,ys))
 end
 
