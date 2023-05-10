@@ -39,9 +39,24 @@ zs = LinRange(0,1/2,32)
 show_animation(ψs) # Here is the initial beam.
 ```
 
+```julia
+using StructuredLight
+
+rs = LinRange(-4,4,256)
+zs = LinRange(0,1/2,32)
+
+#This is a gaussian mode
+ψ₀ = lg(rs,rs)
+scalings = @. √(1+4*zs^2) #Here, we introduce the scallings given by w(z)/w0
+
+#Now we propagate, including the scalings
+ψs = free_propagation(ψ₀,rs,rs,zs,scalings)
+
+#Note that the scallings compensate the diffraction of the beam.
+#Therefore, the animation seems still.
+show_animation(ψs)
+```
+
 ```@docs
 kerr_propagation
 ```
-
-One can also call `free_propagation` with a vector of z values:
-

@@ -43,7 +43,7 @@ Propagate an inital profile `ψ₀` over a distance `z`.
 
 The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
 
-`xs` and `ys` are the grids over which `ψ₀` is calculated.
+`xs` and `ys` are the grids over which `ψ₀` and the output are calculated.
 
 `k` is the wavenumber.
 """
@@ -79,7 +79,7 @@ Propagate an inital profile `ψ₀` over every distance in the array `zs`.
 
 The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
 
-`xs` and `ys` are the grids over which `ψ₀` is calculated.
+`xs` and `ys` are the grids over which `ψ₀` and the output are calculated.
 
 `k` is the wavenumber.
 """
