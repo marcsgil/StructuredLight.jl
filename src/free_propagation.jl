@@ -3,19 +3,19 @@ function fourier_propagation_kernel(κ,k,z)
     cis( factor * sum(abs2,κ) )
 end
 
-function inner_scalling_phase(r,k,z,scalling)
-    if iszero(z) || isone(scalling)
+function inner_scaling_phase(r,k,z,scaling)
+    if iszero(z) || isone(scaling)
         one(z)
     else
-        cis( k * ( 1 - scalling ) * sum(abs2,r) / (2z))
+        cis( k * ( 1 - scaling ) * sum(abs2,r) / (2z))
     end
 end
 
-function outter_scalling_phase(r,k,z,scalling)
-    if iszero(z) || isone(scalling)
+function outter_scaling_phase(r,k,z,scaling)
+    if iszero(z) || isone(scaling)
         one(z)
     else
-        cis( - k * ( 1 - scalling ) * scalling * sum(abs2,r) / (2z) )
+        cis( - k * ( 1 - scaling ) * scaling * sum(abs2,r) / (2z) )
     end
 end
 
@@ -28,22 +28,29 @@ function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan)
     fftshift(dispersion_step!(cache,kernel,plan,iplan))
 end
 
-function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan,scalling)
-    cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scalling_phase(r,k,z,scalling) / scalling, direct_grid(xs,ys)))
+function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan,scaling)
+    cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scaling_phase(r,k,z,scaling) / scaling, direct_grid(xs,ys)))
 
-    kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scalling), reciprocal_grid(xs,ys)) |> ifftshift
+    kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scaling), reciprocal_grid(xs,ys)) |> ifftshift
     
-    fftshift(dispersion_step!(cache,kernel,plan,iplan)) .* map_convert(ψ₀, r -> outter_scalling_phase(r,k,z,scalling), direct_grid(xs,ys))
+    fftshift(dispersion_step!(cache,kernel,plan,iplan)) .* map_convert(ψ₀, r -> outter_scaling_phase(r,k,z,scaling), direct_grid(xs,ys))
 end
 
 """
     free_propagation(ψ₀,xs,ys,z;k=1)
+    free_propagation(ψ₀,xs,ys,z,scaling;k=1)
+    free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1)
+    free_propagation(ψ₀,xs,ys,z::AbstractArray,scaling::AbstractArray;k=1)
 
-Propagate an inital profile `ψ₀` over a distance `z`. 
+Propagate an inital profile `ψ₀`.
 
-The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
+The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` at distance `z` under the initial condition `ψ₀`.
 
-`xs` and `ys` are the grids over which `ψ₀` and the output are calculated.
+`xs` and `ys` are the grids over which `ψ₀` is calculated.
+
+If `z` is an `AbstractArray`, the output is a 3D array representing the solution at every element of `z`.
+
+If scaling isn't provided, the input and output grids are the same. Otherwise, the output at a distance `z[n]` is calculated on a scalled grid defined by `scaling[n] * xs` and `scaling[n] * ys`.
 
 `k` is the wavenumber.
 """
@@ -53,45 +60,21 @@ function free_propagation(ψ₀,xs,ys,z;k=1)
     free_propagation(ψ₀,xs,ys,z,k,plan,iplan)
 end
 
-"""
-    free_propagation(ψ₀,xs,ys,z,scalling;k=1)
-
-Propagate an inital profile `ψ₀` over a distance `z`.  
-
-The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
-
-`xs` and `ys` are the grids over which `ψ₀` is calculated.
-
-The output is calculated on a scalled grid defined by `scalling * xs` and `scalling * ys`
-
-`k` is the wavenumber.
-"""
-function free_propagation(ψ₀,xs,ys,z,scalling;k=1)
+function free_propagation(ψ₀,xs,ys,z,scaling;k=1)
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
-    free_propagation(ψ₀,xs,ys,z,k,plan,iplan,scalling)
+    free_propagation(ψ₀,xs,ys,z,k,plan,iplan,scaling)
 end
 
-"""
-    free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
-
-Propagate an inital profile `ψ₀` over every distance in the array `zs`.  
-
-The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
-
-`xs` and `ys` are the grids over which `ψ₀` and the output are calculated.
-
-`k` is the wavenumber.
-"""
-function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
+function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1)
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
 
-    result = similar(ψ₀,size(ψ₀)...,length(zs))
+    result = similar(ψ₀,size(ψ₀)...,length(z))
 
     ks = reciprocal_grid(xs,ys) |> collect |> ifftshift
 
-    for (n,z) in enumerate(zs)
+    for (n,z) in enumerate(z)
         cache = ifftshift(ψ₀)
         phases = convert(typeof(ψ₀), fourier_propagation_kernel.(ks,k,z))
         dispersion_step!(cache,phases,plan,iplan)
@@ -101,33 +84,20 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
     result
 end
 
-"""
-    free_propagation(ψ₀,xs,ys,zs::AbstractArray,scallings;k=1)
-
-Propagate an inital profile `ψ₀` over every distance in the array `zs`.  
-
-The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` under the initial condition `ψ₀`.
-
-`xs` and `ys` are the grids over which `ψ₀` is calculated.
-
-The output at a distance zs[n] is calculated on a scalled grid defined by `scallings[n] * xs` and `scallings[n] * ys`
-
-`k` is the wavenumber.
-"""
-function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scallings;k=1)
+function free_propagation(ψ₀,xs,ys,z::AbstractArray,scaling::AbstractArray;k=1)
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
 
-    result = similar(ψ₀,size(ψ₀)...,length(zs))
+    result = similar(ψ₀,size(ψ₀)...,length(z))
 
     ks = reciprocal_grid(xs,ys) |> collect |> ifftshift
 
-    for (n,z) in enumerate(zs)
-        cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scalling_phase(r,k,z,scallings[n]) / scallings[n], direct_grid(xs,ys)))
-        kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scallings[n]), reciprocal_grid(xs,ys)) |> ifftshift
+    for (n,z) in enumerate(z)
+        cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scaling_phase(r,k,z,scaling[n]) / scaling[n], direct_grid(xs,ys)))
+        kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scaling[n]), reciprocal_grid(xs,ys)) |> ifftshift
         dispersion_step!(cache,kernel,plan,iplan)
         fftshift!(view(result,:,:,n),cache)
-        result[:,:,n] = view(result,:,:,n) .* map_convert(ψ₀, r -> outter_scalling_phase(r,k,z,scallings[n]), direct_grid(xs,ys))
+        result[:,:,n] = view(result,:,:,n) .* map_convert(ψ₀, r -> outter_scaling_phase(r,k,z,scaling[n]), direct_grid(xs,ys))
     end
 
     result

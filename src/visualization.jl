@@ -21,50 +21,28 @@ function convert2image(ψ::AbstractArray{T,N};colormap=:hot,ratio=1) where {T,N}
 end
 
 """
-    visualize(ψ::AbstractArray{T,2}; 
-        colormap=:hot,
-        ratio=1) where T
+    visualize(ψ::AbstractArray{T,2}; colormap=:hot, ratio=1) where T
+    visualize(ψ::AbstractArray{T,3}; colormap=:hot, ratio=1) where T
+    visualize(ψ::AbstractArray{T,4}; colormap=:hot, ratio=1) where T
 
 Vizualize the beam described by array `ψ`. 
 
 The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
 
 The image is rescaled by `ratio`.
+
+When using the 3D Array signature, the third dimension is interpreted as defining different images, which are displayed in a row.
+
+When using the 4D Array signature, the third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 """
 function visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1) where T
     convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)
 end
 
-"""
-    visualize(ψ::AbstractArray{T,3}; 
-        colormap=:hot,
-        ratio=1) where T
-
-Vizualize the beam described by array `ψ`.
-
-The third dimension is interpreted as defining different images, which are displayed in a row.
-
-The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
-
-The image is rescaled by `ratio`.
-"""
 function visualize(ψ::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T
     convert2image(hcat(eachslice(normalize(Array(ψ),normalize_by_first=normalize_by_first),dims=3)...),colormap=colormap,ratio=ratio)
 end
 
-"""
-    visualize(ψ::AbstractArray{T,4}; 
-        colormap=:hot,
-        ratio=1) where T
-
-Vizualize the beam described by array `ψ`.
-
-The third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
-
-The colors are given by `colormap`. The full catalogue can be found at the [ColorSchemes.jl documentation](https://juliagraphics.github.io/ColorSchemes.jl/stable/catalogue/).
-
-The image is rescaled by `ratio`.
-"""
 function visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_first=false) where T
     vcat(visualize.( eachslice(Array(ψ),dims=4),colormap=colormap,ratio=ratio,normalize_by_first=normalize_by_first )...)
 end
@@ -106,7 +84,7 @@ function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps
 end
 
 #=
-This functionality depend on ImageView, which gives a weird bug in my PC, when used together with images.
+This functionality depend on ImageView, which gives a weird bug in my PC.
 I'm disabiling it for now.
 
 """

@@ -34,10 +34,22 @@ function core_lg(x,y,α,γ₀,l,coefs)
 end
 
 """
-    lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+    lg(x::Real,y::Real,z::Real=0;
         p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
-Compute the Laguerre-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
+    lg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
+        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+    lg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
+        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the Laguerre-Gaussian mode. 
+
+For the first signature, the mode is calculated at point `(x,y,z)`
+
+For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
+
+For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
 
 The optional keyword arguments are:
 
@@ -49,7 +61,7 @@ The optional keyword arguments are:
 
 `k`: wavenumber
 """
-function lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+function lg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert p ≥ 0
@@ -62,26 +74,10 @@ function lg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = 1/(1+im*z/(k*γ₀^2))
     prefactor = normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α))
 
-    @tullio result[i,j] := prefactor*core_lg(xs[i],ys[j],α,γ₀,l,coefs)
+    @tullio result[i,j] := prefactor*core_lg(x[i],y[j],α,γ₀,l,coefs)
 end
 
-"""
-    lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Laguerre-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
-
-The optional keyword arguments are:
-
-`p`: radial index
-
-`l`: topological charge
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
-function lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
+function lg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
     p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert p ≥ 0
@@ -95,25 +91,9 @@ function lg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
         normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α)) * core_lg(x,y,α,γ₀,l,coefs)
     end
 
-    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
+    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
-"""
-    lg(x::Real,y::Real,z::Real=0;
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Laguerre-Gaussian mode at a position (`x`,`y`,`z`).
-
-The optional keyword arguments are:
-
-`p`: radial index
-
-`l`: topological charge
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
 function lg(x::Real,y::Real,z::Real=0;
     p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1)
 
@@ -156,10 +136,22 @@ function core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,isdiagonal)
 end
 
 """
-    function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+    hg(x::Real,y::Real,z::Real=0;
         m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
-Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
+    function hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+    hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the Hermite-Gaussian mode.
+
+For the first signature, the mode is calculated at point `(x,y,z)`
+
+For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
+
+For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
 
 The optional keyword arguments are:
 
@@ -171,7 +163,7 @@ The optional keyword arguments are:
 
 `k`: wavenumber
 """
-function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+function hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
@@ -186,26 +178,10 @@ function hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    @tullio result[i,j] := prefactor*core_hg(xs[i],ys[j],α,γ₀,m,n,x_coefs,y_coefs,false)
+    @tullio result[i,j] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,false)
 end
 
-"""
-    hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
-
-The optional keyword arguments are:
-
-`m`: horizontal index
-
-`n`: vertical index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
-function hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
+function hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
@@ -221,25 +197,9 @@ function hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,false)
     end
 
-    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
+    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
-"""
-    hg(x::Real,y::Real,z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Hermite-Gaussian mode at a position (`x`,`y`,`z`).
-
-The optional keyword arguments are:
-
-`m`: horizontal index
-
-`n`: vertical index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
 function hg(x::Real,y::Real,z::Real=0;
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1)
 
@@ -247,10 +207,22 @@ function hg(x::Real,y::Real,z::Real=0;
 end
 
 """
-    function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+    diagonal_hg(x::Real,y::Real,z::Real=0;
         m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
-Compute the diagonal Hermite-Gaussian mode over a cartesian grid defined by `xs` and `ys`. One may give a distance `z` away from the focus.
+    function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+    diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
+        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+
+Compute the diagonal Hermite-Gaussian mode.
+
+For the first signature, the mode is calculated at point `(x,y,z)`
+
+For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
+
+For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
 
 The optional keyword arguments are:
 
@@ -262,7 +234,7 @@ The optional keyword arguments are:
 
 `k`: wavenumber
 """
-function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
+function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
@@ -277,26 +249,10 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    @tullio result[i,j] := prefactor*core_hg(xs[i],ys[j],α,γ₀,m,n,x_coefs,y_coefs,true)
+    @tullio result[i,j] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,true)
 end
 
-"""
-    diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Hermite-Gaussian mode over a cartesian grid defined by `xs`, `ys` and `zs`.
-
-The optional keyword arguments are:
-
-`m`: diagonal index
-
-`n`: antidiagonal index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
-function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVector{T};
+function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
 
     @assert m ≥ 0
@@ -312,25 +268,9 @@ function diagonal_hg(xs::AbstractVector{T},ys::AbstractVector{T},zs::AbstractVec
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,true)
     end
 
-    @tullio result[i,j,l] := f(xs[i],ys[j],inv(1+im*zs[l]/(k*γ₀^2)))
+    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
-"""
-    diagonal_hg(x::Real,y::Real,z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the diagonal Hermite-Gaussian mode at a position (`x`,`y`,`z`).
-
-The optional keyword arguments are:
-
-`m`: horizontal index
-
-`n`: vertical index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
 function diagonal_hg(x::Real,y::Real,z::Real=0;
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1)
 
@@ -338,31 +278,31 @@ function diagonal_hg(x::Real,y::Real,z::Real=0;
 end
 
 """
-    lens(xs,ys,fx,fy;k=1)
+    lens(x,y,fx,fy;k=1)
 
 Output an array containing the phase shift introduced by a lens of focal lengths `fx` and `fy`.
 
-The calculation is done over a grid defined by `xs` and `ys`.
+The calculation is done over a grid defined by `x` and `y`.
 
 `k` is the incident wavenumber.
 
-To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(xs,ys,fx,fy;k=k)`
+To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(x,y,fx,fy;k=k)`
 """
-function lens(xs,ys,fx,fy;k=1)
-    @tullio result[i,j] := cis( -k * (xs[i]^2/fx + ys[j]^2/fy) / 2 )
+function lens(x,y,fx,fy;k=1)
+    @tullio result[i,j] := cis( -k * (x[i]^2/fx + y[j]^2/fy) / 2 )
 end
 
 """
-    tilted_lens(xs,ys,f,ϕ;k=1)
+    tilted_lens(x,y,f,ϕ;k=1)
 
 Output an array containing the phase shift introduced by a spherical lens of focal length `f` tilted by an angle `ϕ`.
 
-The calculation is done over a grid defined by `xs` and `ys`.
+The calculation is done over a grid defined by `x` and `y`.
 
 `k` is the incident wavenumber.
 
-To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* tilted_lens(xs,ys,f,ϕ;k=k)`
+To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* tilted_lens(x,y,f,ϕ;k=k)`
 """
-function tilted_lens(xs,ys,f,ϕ;k=1)
-    lens(xs,ys,sec(ϕ)*f,cos(ϕ)*f,k=k)
+function tilted_lens(x,y,f,ϕ;k=1)
+    lens(x,y,sec(ϕ)*f,cos(ϕ)*f,k=k)
 end

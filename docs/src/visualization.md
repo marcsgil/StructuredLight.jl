@@ -1,14 +1,16 @@
 # Visualization
 
+This package offer tools that help the visualization of the generated beams.
+
 ## `visualize` 
 
-This package offer tools that help the visualization of the generated beams. The simplest of such tools is the `visualize` function, which displays the beam as a static image. It accepts two, three and four dimensional arrays.
+The simplest of such tools is the `visualize` function, which displays the beam as a static image. It accepts two, three and four dimensional arrays.
 
 ```@docs
 visualize
 ```
 
-Example:
+### Example:
 
 ```julia
 using StructuredLight
@@ -19,16 +21,16 @@ rs = LinRange(-4,4,256)
 
 ψ₂ = stack( [hg(rs,rs,m=3), hg(rs,rs,n=3)] )
 
-visualize(ψ₁)
+visualize(ψ₁) #Displays ψ₁ 
 
-visualize(ψ₂)
+visualize(ψ₂) #Displays ψ₂
 
 ψ₃ = stack([ψ₁,ψ₂])
 
-visualize(ψ₃)
+visualize(ψ₃) #Displays ψ₁ and ψ₂ in a row.
 ``` 
 
- With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kinds of animations. 
+With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kinds of animations. 
 
 ## `show_animation`
 
@@ -38,7 +40,7 @@ visualize(ψ₃)
 show_animation
 ```
 
-Example:
+### Example:
 
 ```julia
 using StructuredLight
@@ -61,7 +63,7 @@ show_animation(ψs,fps=12)
 save_animation
 ```
 
-Example:
+### Example:
 
 ```julia
 using StructuredLight
