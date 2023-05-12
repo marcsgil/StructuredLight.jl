@@ -83,10 +83,6 @@ function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps
     VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
 end
 
-#=
-This functionality depend on ImageView, which gives a weird bug in my PC.
-I'm disabiling it for now.
-
 """
     interactive_visualization(ψs::AbstractArray{T,3}; 
         colormap=:hot,
@@ -104,5 +100,3 @@ The image is rescaled by `ratio`.
 function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
     imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
 end
-
-=#
