@@ -10,7 +10,7 @@ propagation_kernel(κ,k,z) = @. cis( -z/2k * sum(abs2,κ) )
 
 function scaling_phase(r,k,z,scaling)
     if iszero(z)
-        ones(typeof(z),size(r)...)
+        1
     else
         @. cis( k * ( 1 - scaling ) * sum(abs2,r) / (2z))
     end   
@@ -38,8 +38,7 @@ end
 
 """
     free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
-    free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1)
-    free_propagation(ψ₀,xs,ys,z::AbstractArray,scaling::AbstractArray;k=1)
+    free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling::AbstractArray=ones(length(z)))
 
 Propagate an inital profile `ψ₀`.
 
@@ -59,7 +58,7 @@ function free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
     free_propagation(ψ₀,xs,ys,z,k,plan,iplan,scaling)
 end
 
-function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling=ones(length(z)))
+function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling::AbstractArray=ones(length(z)))
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
 
@@ -88,40 +87,3 @@ function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling=ones(length(z
 
     result
 end
-
-function free_propagation_old(ψ₀,xs,ys,z::AbstractArray;k=1)
-    plan = plan_fft!(ψ₀)
-    iplan = plan_ifft!(ψ₀)
-
-    result = similar(ψ₀,size(ψ₀)...,length(z))
-
-    ks = reciprocal_grid(xs,ys) |> collect |> ifftshift
-
-    for (n,z) in enumerate(z)
-        cache = ifftshift(ψ₀)
-        phases = oftype(ψ₀,propagation_kernel(ks,k,z))
-        dispersion_step!(cache,phases,plan,iplan)
-        fftshift!(view(result,:,:,n),cache)
-    end
-
-    result
-end
-
-#=function free_propagation(ψ₀,xs,ys,z::AbstractArray,scaling::AbstractArray;k=1)
-    plan = plan_fft!(ψ₀)
-    iplan = plan_ifft!(ψ₀)
-
-    result = similar(ψ₀,size(ψ₀)...,length(z))
-
-    κ = reciprocal_grid(xs,ys) |> collect |> ifftshift
-
-    for (n,z) in enumerate(z)
-        cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scaling_phase(r,k,z,scaling[n]) / scaling[n], direct_grid(xs,ys)))
-        kernel = map_convert(ψ₀, κ-> propagation_kernel(κ,k,z/scaling[n]), reciprocal_grid(xs,ys)) |> ifftshift
-        dispersion_step!(cache,kernel,plan,iplan)
-        fftshift!(view(result,:,:,n),cache)
-        result[:,:,n] = view(result,:,:,n) .* map_convert(ψ₀, r -> outter_scaling_phase(r,k,z,scaling[n]), direct_grid(xs,ys))
-    end
-
-    result
-end=#
