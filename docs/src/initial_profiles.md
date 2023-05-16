@@ -1,10 +1,10 @@
 # Initial Profiles
 
-This package implements the Laguerre-Gaussian modes (`lg`), the Hermite-Gaussian modes (`hg`) and its diagonal version (`diagonal_hg`).
+This package implements the Laguerre-Gauss modes (`lg`), the Hermite-Gauss modes (`hg`) and its diagonal version (`diagonal_hg`).
 
 In all cases, one must specify the points or the grids over which the mode is calculated. The other beam parameters are specified through keyword arguments.
 
-## Laguerre-Gaussian
+## Laguerre-Gauss
 
 ```@docs
 lg
@@ -29,7 +29,7 @@ zs = LinRange(0,1,32)
 show_animation(ψs, ratio=2)
 ```
 
-Analytical propagation of a more complicated laguerre-gaussian:
+Analytical propagation of a more complicated Laguerre-Gauss:
 ```julia
 using StructuredLight
 rs = LinRange(-5,5,256) 
@@ -38,7 +38,7 @@ zs = LinRange(0,1,32)
 show_animation(ψs, ratio=2)
 ```
 
-## Hermite-Gaussian
+## Hermite-Gauss
 
 
 ```@docs
@@ -47,7 +47,7 @@ hg
 
 ### Examples
 
-Analytical propagation of a hermite-gaussian with adjusted waist:
+Analytical propagation of a Hermite-Gauss with adjusted waist:
 ```julia
 using StructuredLight
 rs = LinRange(-5,5,256) 
@@ -56,7 +56,7 @@ zs = LinRange(0,1,32)
 show_animation(ψs, ratio=2)
 ```
 
-Superposition of hermite-gaussians. Note that we can propagate backwards using negative values of `z`.
+Superposition of Hermite-Gausss. Note that we can propagate backwards using negative values of `z`.
 ```julia
 using StructuredLight
 rs = LinRange(-4,4,256) 
@@ -66,7 +66,7 @@ zs = LinRange(-.5,.7,128)
 show_animation(ψs, ratio=2)
 ```
 
-## Diagonal Hermite-Gaussian
+## Diagonal Hermite-Gauss
 
 ```@docs
 diagonal_hg
@@ -74,7 +74,7 @@ diagonal_hg
 
 ### Examples
 
-Analytical propagation of a hermite-gaussian with adjusted wavenumber:
+Analytical propagation of a Hermite-Gauss with adjusted wavenumber:
 ```julia
 using StructuredLight
 rs = LinRange(-5,5,256) 

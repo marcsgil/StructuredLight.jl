@@ -8,6 +8,5 @@ makedocs(
         "visualization.md",
         "propagation.md",
         "miscellany.md",
-        "Examples" => [ "astig_conversion.md", "kerr_diffraction_rings.md" ]
-    ]
+        "examples.md" ]
     )

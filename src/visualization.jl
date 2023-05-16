@@ -83,6 +83,10 @@ function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps
     VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
 end
 
+#=
+ImageView is based on GTK, which isn't working properly on Windows.
+Therefore, I'm disabiling this functionality for now.
+
 """
     interactive_visualization(ψs::AbstractArray{T,3}; 
         colormap=:hot,
@@ -100,3 +104,4 @@ The image is rescaled by `ratio`.
 function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
     imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
 end
+=#

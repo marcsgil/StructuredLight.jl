@@ -64,3 +64,31 @@ show_animation(ψs,ratio=2)
 ```@docs
 kerr_propagation
 ```
+
+### Example 
+```julia
+using StructuredLight
+
+rs = LinRange(-2.5,2.5,256) #The transverse grid
+zs = LinRange(0,.1,32) #The z grid
+
+ψ₀ = lg(rs,rs) #Calculates the fundamental Laguerre-Gaussian mode
+
+#We perform the propagation with a strong nonlinearity
+ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=100)
+
+show_animation(ψ) #The beam colapses due to the self focusing effect
+```
+
+## CUDA support
+
+Both `free_propagation` and `kerr_propagation` can be run on Nvidia GPUs, which will greatly improve the performance of these functions. If you have one, you simply need to convert your initial profile to a `CuArray` and pass this converted array to the propagation methods (check the [CUDA.jl documentation](https://cuda.juliagpu.org/stable/) for more details). Then, [multiple dispatch](https://docs.julialang.org/en/v1/manual/methods/#Methods) will do its magic!
+
+Here is an example:
+```julia
+using CUDA #It is necessary to load the CUDA package
+
+ψ₀ = lg(rs,rs) |> cu #Transfers array to GPU
+
+ψ = free_propagation(ψ₀,rs,rs,zs) #This is running on the GPU!
+```
