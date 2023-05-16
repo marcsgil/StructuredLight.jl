@@ -6,8 +6,6 @@ using FastTransforms
 
 include("dft_utils.jl")
 
-using FourierTools
-
 using Images, VideoIO
 @reexport using ColorSchemes
 using Tullio
