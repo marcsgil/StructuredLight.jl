@@ -1,7 +1,12 @@
-function fourier_propagation_kernel(κ,k,z)
-    factor = -z/(2k)
-    cis( factor * sum(abs2,κ) )
+function dispersion_step!(ψ,kernel,plan,iplan)
+    plan*ψ
+    map!(*,ψ,ψ,kernel)
+    iplan*ψ
 end
+
+evolve_phase(ψ,phase) = cis(phase) * ψ
+
+propagation_kernel(κ,k,z) = @. cis( -z/2k * sum(abs2,κ) )
 
 function inner_scaling_phase(r,k,z,scaling)
     if iszero(z) || isone(scaling)
@@ -20,19 +25,21 @@ function outter_scaling_phase(r,k,z,scaling)
 end
 
 map_convert(ψ,f,args...) = convert(typeof(ψ),map(f,args...))
+#map_convert(ψ,f,args...) = convert(typeof(ψ),f.(args...))
 
 function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan)
-    kernel = convert(typeof(ψ₀), fourier_propagation_kernel.(reciprocal_grid(xs,ys),k,z)) |> ifftshift
+    kernel = convert(typeof(ψ₀),propagation_kernel(reciprocal_grid(xs,ys),k,z)) |> ifftshift_view
+
     cache = ifftshift(ψ₀)
 
-    fftshift(dispersion_step!(cache,kernel,plan,iplan))
+    dispersion_step!(cache,kernel,plan,iplan) |> fftshift_view
 end
 
 function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan,scaling)
     cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scaling_phase(r,k,z,scaling) / scaling, direct_grid(xs,ys)))
 
-    kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scaling), reciprocal_grid(xs,ys)) |> ifftshift
-    
+    kernel = map_convert(ψ₀, κ-> propagation_kernel(κ,k,z/scaling), reciprocal_grid(xs,ys)) |> ifftshift
+
     fftshift(dispersion_step!(cache,kernel,plan,iplan)) .* map_convert(ψ₀, r -> outter_scaling_phase(r,k,z,scaling), direct_grid(xs,ys))
 end
 
@@ -76,7 +83,7 @@ function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1)
 
     for (n,z) in enumerate(z)
         cache = ifftshift(ψ₀)
-        phases = convert(typeof(ψ₀), fourier_propagation_kernel.(ks,k,z))
+        phases = convert(typeof(ψ₀), propagation_kernel.(ks,k,z))
         dispersion_step!(cache,phases,plan,iplan)
         fftshift!(view(result,:,:,n),cache)
     end
@@ -94,7 +101,7 @@ function free_propagation(ψ₀,xs,ys,z::AbstractArray,scaling::AbstractArray;k=
 
     for (n,z) in enumerate(z)
         cache = ifftshift(ψ₀ .* map_convert(ψ₀, r -> inner_scaling_phase(r,k,z,scaling[n]) / scaling[n], direct_grid(xs,ys)))
-        kernel = map_convert(ψ₀, κ-> fourier_propagation_kernel(κ,k,z/scaling[n]), reciprocal_grid(xs,ys)) |> ifftshift
+        kernel = map_convert(ψ₀, κ-> propagation_kernel(κ,k,z/scaling[n]), reciprocal_grid(xs,ys)) |> ifftshift
         dispersion_step!(cache,kernel,plan,iplan)
         fftshift!(view(result,:,:,n),cache)
         result[:,:,n] = view(result,:,:,n) .* map_convert(ψ₀, r -> outter_scaling_phase(r,k,z,scaling[n]), direct_grid(xs,ys))

@@ -6,7 +6,7 @@ using FastTransforms
 
 include("dft_utils.jl")
 
-include("steps.jl")
+using FourierTools
 
 using Images, VideoIO
 @reexport using ColorSchemes
