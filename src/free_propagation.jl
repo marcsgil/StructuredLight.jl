@@ -46,14 +46,13 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1,scaling::AbstractArr
     qxs = reciprocal_grid(xs) |> ifftshift_view
     qys = reciprocal_grid(ys) |> ifftshift_view
 
-    cache = similar(ψ₀)
-
-    for (n,z) in enumerate(zs)
-        ifftshift!(cache,ψ₀)
+    Threads.@threads for n in eachindex(zs)
+        cache = fftshift(ψ₀)
             
         plan*cache
+        z = zs[n]
         @tullio cache[i,j] *= cis( - z / 2k * ( qxs[i]^2 + qys[j]^2 ) )
-        plan*cache
+        iplan*cache
 
         fftshift!(view(result,:,:,n),cache)
     end
