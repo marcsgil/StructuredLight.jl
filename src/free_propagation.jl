@@ -4,37 +4,8 @@ function dispersion_step!(ψ,kernel,plan,iplan)
     iplan*ψ
 end
 
-evolve_phase(ψ,phase) = cis(phase) * ψ
+propagation_kernel(q,k,z) = @. cis( -z/2k * sum(abs2,q) )
 
-propagation_kernel(κ,k,z) = @. cis( -z/2k * sum(abs2,κ) )
-
-function scaling_phase(r,k,z,scaling)
-    if iszero(z)
-        1
-    else
-        @. cis( k * ( 1 - scaling ) * sum(abs2,r) / (2z))
-    end   
-end
-
-function free_propagation(ψ₀,xs,ys,z::Number,k,plan,iplan,scaling)
-    if isone(scaling)
-        cache = ifftshift(ψ₀)
-    else
-        scaling_phases = oftype(ψ₀, scaling_phase(direct_grid(xs,ys),k,z,scaling))
-        cache = ifftshift( ψ₀ .* scaling_phases ./ scaling )
-    end  
-
-    kernel = oftype(ψ₀, propagation_kernel(reciprocal_grid(xs,ys),k,z/scaling) ) |> ifftshift
-
-    dispersion_step!(cache,kernel,plan,iplan)
-    fftshift!(kernel,cache)
-
-    if isone(scaling)
-        kernel
-    else
-        kernel .= kernel.* conj(scaling_phases).^scaling
-    end
-end
 
 """
     free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
@@ -52,37 +23,39 @@ If scaling isn't provided, the input and output grids are the same. Otherwise, t
 
 `k` is the wavenumber.
 """
-function free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
-    plan = plan_fft!(ψ₀)
-    iplan = plan_ifft!(ψ₀)
-    free_propagation(ψ₀,xs,ys,z,k,plan,iplan,scaling)
+function free_propagation(ψ₀,xs,ys,z::Number,k=1,scaling=1)
+    qxs = reciprocal_grid(xs) |> ifftshift_view
+    qys = reciprocal_grid(ys) |> ifftshift_view
+
+    cache = ifftshift(ψ₀)
+
+    fft!(cache)
+    @tullio cache[i,j] *= cis( - z / 2k * ( qxs[i]^2 + qys[j]^2 ) )
+    ifft!(cache)
+
+    fftshift_view(cache)
 end
 
-function free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling::AbstractArray=ones(length(z)))
+
+function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1,scaling::AbstractArray=ones(length(zs)))
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
 
-    result = similar(ψ₀,size(ψ₀)...,length(z))
+    result = similar(ψ₀,size(ψ₀)...,length(zs))
 
-    κ = reciprocal_grid(xs,ys) |> collect |> ifftshift
-    R = direct_grid(xs,ys) |> collect
+    qxs = reciprocal_grid(xs) |> ifftshift_view
+    qys = reciprocal_grid(ys) |> ifftshift_view
 
-    for (n,z) in enumerate(z)
-        if isone(scaling[n])
-            cache = ifftshift(ψ₀)
-        else
-            scaling_phases = oftype(ψ₀, scaling_phase(R,k,z,scaling[n]))
-            cache = ifftshift( ψ₀ .* scaling_phases ./ scaling[n] )
-        end  
-        
-        kernel = oftype(ψ₀, propagation_kernel(κ,k,z/scaling[n]) )
-        
-        dispersion_step!(cache,kernel,plan,iplan)
+    cache = similar(ψ₀)
+
+    for (n,z) in enumerate(zs)
+        ifftshift!(cache,ψ₀)
+            
+        plan*cache
+        @tullio cache[i,j] *= cis( - z / 2k * ( qxs[i]^2 + qys[j]^2 ) )
+        plan*cache
+
         fftshift!(view(result,:,:,n),cache)
-        
-        if !isone(scaling[n])
-            result[:,:,n] = view(result,:,:,n) .* conj(scaling_phases).^scaling[n]
-        end
     end
 
     result

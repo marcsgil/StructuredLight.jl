@@ -2,7 +2,7 @@ module StructuredLight
 
 using Reexport
 
-using FastTransforms
+using FourierTools
 
 include("dft_utils.jl")
 
@@ -19,6 +19,9 @@ export visualize,show_animation,save_animation
 
 include("free_propagation.jl")
 export free_propagation
+
+include("free_propagation_old.jl")
+export free_propagation_old
 
 include("kerr_propagation.jl")
 export kerr_propagation
