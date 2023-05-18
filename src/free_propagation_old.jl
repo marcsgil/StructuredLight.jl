@@ -1,4 +1,10 @@
+function dispersion_step!(ψ,kernel,plan,iplan)
+    plan*ψ
+    map!(*,ψ,ψ,kernel)
+    iplan*ψ
+end
 
+propagation_kernel(q,k,z) = @. cis( -z/2k * sum(abs2,q) )
 
 evolve_phase(ψ,phase) = cis(phase) * ψ
 
