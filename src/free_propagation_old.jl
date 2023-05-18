@@ -8,10 +8,9 @@ propagation_kernel(q,k,z) = @. cis( -z/2k * sum(abs2,q) )
 
 evolve_phase(ψ,phase) = cis(phase) * ψ
 
-
 function scaling_phase(r,k,z,scaling)
     if iszero(z)
-        ones(typeof(z),size(r)...)
+        one(complex(z))
     else
         @. cis( k * ( 1 - scaling ) * sum(abs2,r) / (2z))
     end   
