@@ -1,8 +1,3 @@
-function get_propagation_kernel(qxs,qys,zs,k)
-    @tullio mini_kernel[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
-    @tullio kernel[i,j,l] := cis( mini_kernel[i,j] * zs[l] )
-end
-
 """
     free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
     free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling::AbstractArray=ones(length(z)))
@@ -21,19 +16,19 @@ The output at a distance `z[n]` is calculated on a scalled grid defined by `scal
 """
 function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
     FFTW.set_num_threads(8)
-    qxs = reciprocal_grid(xs) |> ifftshift_view
-    qys = reciprocal_grid(ys) |> ifftshift_view
-
-    kernel = get_propagation_kernel(qxs,qys,zs,k)
 
     shifted_ψ₀ = ifftshift(ψ₀)
     fft!(shifted_ψ₀)
 
-    @tullio kernel[i,j,l] *= shifted_ψ₀[i,j]
+    qxs = reciprocal_grid(xs) |> ifftshift_view
+    qys = reciprocal_grid(ys) |> ifftshift_view
 
-    ifft!(kernel,(1,2))
+    @tullio cache[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio ψ₁[i,j,l] := shifted_ψ₀[i,j] * cis( cache[i,j] * zs[l] )
 
-    fftshift_view(kernel,(1,2))
+    ifft!(ψ₁,(1,2))
+
+    fftshift_view(ψ₁,(1,2))
 end
 
 function free_propagation(ψ₀,xs,ys,z::Number,k=1)
@@ -43,10 +38,10 @@ end
 function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scaling::AbstractArray;k=1)
     FFTW.set_num_threads(8)
 
+    shifted_ψ₀ = ifftshift_view(ψ₀)
+
     shifted_xs = xs |> ifftshift_view
     shifted_ys = ys |> ifftshift_view
-
-    shifted_ψ₀ = ifftshift_view(ψ₀)
 
     @tullio cache1[i,j] := k * ( shifted_xs[i]^2 + shifted_ys[j]^2 ) / 2
     @tullio ψ₁[i,j,l] := shifted_ψ₀[i,j] * cis( cache1[i,j] * ( 1 - scaling[l] ) / zs[l] ) / scaling[l]
@@ -59,7 +54,7 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scaling::AbstractArray;k
     @tullio ψ₁[i,j,l] *= cis( cache2[i,j] * zs[l] / scaling[l] )
 
     ifft!(ψ₁,(1,2))
-    @tullio ψ₁[i,j,l] *= cis( cache1[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])
+    @tullio ψ₁[i,j,l] *= cis( - cache1[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])
 
     fftshift_view(ψ₁,(1,2))
 end

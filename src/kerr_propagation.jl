@@ -1,3 +1,11 @@
+function dispersion_step!(ψ,kernel,plan,iplan)
+    plan*ψ
+    map!(*,ψ,ψ,kernel)
+    iplan*ψ
+end
+
+evolve_phase(ψ,phase) = cis(phase) * ψ
+
 function type_2A_step!(ψ,phases,plan,iplan,factor,repetitions)
     for _ in 1:repetitions
         map!(ψ->evolve_phase(ψ,abs2(ψ)*factor/2),ψ,ψ)
