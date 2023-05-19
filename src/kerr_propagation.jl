@@ -1,3 +1,7 @@
+function fourier_propagation_kernel(qs,k,z)
+    cis( - z * sum(abs2,qs) / (2k) )
+end
+
 function dispersion_step!(ψ,kernel,plan,iplan)
     plan*ψ
     map!(*,ψ,ψ,kernel)

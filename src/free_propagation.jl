@@ -1,6 +1,6 @@
 """
-    free_propagation(ψ₀,xs,ys,z;k=1,scaling=1)
-    free_propagation(ψ₀,xs,ys,z::AbstractArray;k=1,scaling::AbstractArray=ones(length(z)))
+    free_propagation(ψ₀, xs, ys, z::Number [, scaling]; k=1)
+    free_propagation(ψ₀,xs,ys,z::AbstractArray [, scaling]; k=1)
 
 Propagate an inital profile `ψ₀`.
 
@@ -31,11 +31,9 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray;k=1)
     fftshift_view(ψ₁,(1,2))
 end
 
-function free_propagation(ψ₀,xs,ys,z::Number,k=1)
-    dropdims(free_propagation(ψ₀,xs,ys,[z];k=k),dims=3)
-end
-
 function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scaling::AbstractArray;k=1)
+    @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
+
     FFTW.set_num_threads(8)
 
     shifted_ψ₀ = ifftshift_view(ψ₀)
@@ -57,4 +55,12 @@ function free_propagation(ψ₀,xs,ys,zs::AbstractArray,scaling::AbstractArray;k
     @tullio ψ₁[i,j,l] *= cis( - cache1[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])
 
     fftshift_view(ψ₁,(1,2))
+end
+
+function free_propagation(ψ₀,xs,ys,z::Number;k=1)
+    dropdims(free_propagation(ψ₀,xs,ys,[z];k=k),dims=3)
+end
+
+function free_propagation(ψ₀,xs,ys,z::Number,scaling;k=1)
+    dropdims(free_propagation(ψ₀,xs,ys,[z],[scaling];k=k),dims=3)
 end

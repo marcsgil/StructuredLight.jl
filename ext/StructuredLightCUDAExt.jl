@@ -21,6 +21,8 @@ function StructuredLight.free_propagation(ψ₀::CuArray,xs,ys,zs::AbstractArray
 end
 
 function StructuredLight.free_propagation(ψ₀::CuArray,xs,ys,zs::AbstractArray,scaling::AbstractArray;k=1)
+    @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
+
     shifted_ψ₀ = ifftshift(ψ₀)
 
     shifted_xs = xs |> ifftshift_view
