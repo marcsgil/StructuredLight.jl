@@ -68,7 +68,7 @@ end
     colormap=:hot,
     ratio=1,
     fps=16, 
-    encoder_options = (crf=0, preset="veryslow")) where T
+    encoder_options = nothing) where T
 
 Save an animation of `ψs` at `path` with a framerate of `fps`.
 
@@ -78,9 +78,13 @@ The image is rescaled by `ratio`.
 
 Follow the [VideoIO.jl documentation](https://juliaio.github.io/VideoIO.jl/stable/writing/) for more information on `encoder_options`.
 """
-function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16, encoder_options = (crf=0, preset="veryslow")) where T
+function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16, encoder_options = nothing) where T
     imgstack = [RGB{N0f8}.(convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)) for ψ in eachslice(ψs,dims=3)]
-    VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
+    if isnothing(encoder_options)
+        VideoIO.save(path, imgstack, framerate=fps)
+    else
+        VideoIO.save(path, imgstack, framerate=fps, encoder_options = encoder_options)
+    end    
 end
 
 #=

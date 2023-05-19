@@ -7,7 +7,6 @@ In this example, we reproduce the results of [this work](https://www.sciencedire
 ```julia
 #Here, we initialize the package and define the experimental parameters:
 using StructuredLight
-using CUDA
 
 #All quantities have unit of (inverse) meter
 
@@ -24,7 +23,7 @@ z_cr = z₀/(z₀/f-1) #Conversion distance
 
 # Now, we set up our grid and the initial profile by including the action of a tilted lens:
 rs = LinRange(-70w0,70w0,1024)
-ψ₀ = lg(rs,rs,z₀,l=3,w0=w0,k=k) .* tilted_lens(rs,rs,f,ξ,k=k) |> cu
+ψ₀ = lg(rs,rs,z₀,l=3,w0=w0,k=k) .* tilted_lens(rs,rs,f,ξ,k=k)
 
 # Finally, we propagate. 
 # Note that we introduce scalings, because, otherwise, the beam would be to small.
