@@ -1,25 +1,3 @@
-function _free_propagation!(ψ₀,qxs,qys,zs,k)
-    fft!(ψ₀)
-
-    reciprocal_phases = reciprocal_quadratic_phase(qxs,qys,k)
-    ψ = apply_reciprocal_phases(ψ₀,reciprocal_phases,zs)
-
-    ifft!(ψ,(1,2))
-end
-
-function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
-    direct_phases = direct_quadratic_phase(xs,ys,k)
-    ψ = apply_direct_phases(ψ₀,direct_phases,zs,scaling)
-
-    fft!(ψ,(1,2))
-
-    reciprocal_phases = reciprocal_quadratic_phase(qxs,qys,k)
-    apply_reciprocal_phases!(ψ,reciprocal_phases,zs,scaling)
-
-    ifft!(ψ,(1,2))
-    apply_direct_phases!(ψ,direct_phases,zs,scaling)
-end
-
 """
     free_propagation(ψ₀, xs, ys, z::Number [, scaling]; k=1)
     free_propagation(ψ₀,xs,ys,z::AbstractArray [, scaling]; k=1)
@@ -36,41 +14,64 @@ The output at a distance `z[n]` is calculated on a scalled grid defined by `scal
 
 `k` is the wavenumber.
 """
-function free_propagation(ψ₀,xs,ys,zs;k=1)
+function free_propagation(ψ₀,xs::DFTGrid,ys::DFTGrid,zs;k=1)
     FFTW.set_num_threads(8)
 
     shifted_ψ₀ = ifftshift(ψ₀)
 
-    qxs = reciprocal_grid(xs) |> ifftshift_view
-    qys = reciprocal_grid(ys) |> ifftshift_view
+    qxs = reciprocal_grid(xs,true)
+    qys = reciprocal_grid(ys,true)
     
     ψ = _free_propagation!(shifted_ψ₀,qxs,qys,zs,k)
 
-    fftshift_view(ψ,(1,2))
+    zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
 end
+
+function _free_propagation!(ψ₀,qxs,qys,zs,k)
+    fft!(ψ₀)
+
+    @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio ψ[i,j,l] := ψ₀[i,j] * cis( phases[i,j] * zs[l] )
+
+    ifft!(ψ,(1,2))
+end
+
+function free_propagation(ψ₀,xs::AbstractArray,ys::AbstractArray,zs;k=1)
+    free_propagation(ψ₀,DFTGrid(xs),DFTGrid(ys),zs;k=1)
+end
+
+#=function free_propagation(ψ₀,xs,ys,z::Number;k=1)
+    dropdims(free_propagation(ψ₀,xs,ys,[z];k=k),dims=3)
+end=#
 
 function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
     @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
+    CUDA.@allowscalar @assert 0 ∉ zs "This method does not support `zs` containing `0`"
 
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = ifftshift_view(ψ₀)
+    shifted_ψ₀ = ifftshift(ψ₀)
 
-    shifted_xs = xs |> ifftshift_view
-    shifted_ys = ys |> ifftshift_view
+    direct_xgrid = direct_grid(xs,true)
+    direct_ygrid = direct_grid(ys,true)
 
-    qxs = reciprocal_grid(xs) |> ifftshift_view
-    qys = reciprocal_grid(ys) |> ifftshift_view
+    qxs = reciprocal_grid(xs,true)
+    qys = reciprocal_grid(ys,true)
     
-    ψ = _free_propagation!(shifted_ψ₀,shifted_xs,shifted_ys,zs,qxs,qys,scaling,k)
+    ψ = _free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,zs,qxs,qys,scaling,k)
 
-    fftshift_view(ψ,(1,2))
+    zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
 end
 
-function free_propagation(ψ₀,xs,ys,z::Number;k=1)
-    dropdims(free_propagation(ψ₀,xs,ys,[z];k=k),dims=3)
-end
+function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
+    @tullio direct_phases[i,j] := k * ( xs[i]^2 + ys[j]^2 ) / 2
+    @tullio ψ[i,j,l] := ψ₀[i,j] * cis( direct_phases[i,j] * ( 1 - scaling[l] ) / zs[l] ) / scaling[l]
 
-function free_propagation(ψ₀,xs,ys,z::Number,scaling;k=1)
-    dropdims(free_propagation(ψ₀,xs,ys,[z],[scaling];k=k),dims=3)
+    fft!(ψ,(1,2))
+
+    @tullio reciprocal_phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] )
+
+    ifft!(ψ,(1,2))
+    @tullio ψ[i,j,l] *= cis( - direct_phases[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])
 end

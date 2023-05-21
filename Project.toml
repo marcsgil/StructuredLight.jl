@@ -14,12 +14,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VideoIO = "d6d074c3-1acf-5d4c-9a43-ef38773959a2"
-
-[weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-
-[extensions]
-StructuredLightCUDAExt = "CUDA"
 
 [compat]
 julia = "1"

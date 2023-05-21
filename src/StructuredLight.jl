@@ -4,12 +4,13 @@ using Reexport
 
 using FourierTools
 
-include("dft_utils.jl")
-
 using Images, VideoIO
-@reexport using ColorSchemes
-using Tullio, CUDAKernels, KernelAbstractions
+@reexport using ColorSchemes, CUDA
+using Tullio, CUDA, CUDAKernels, KernelAbstractions
 import SpecialFunctions: beta 
+
+include("dft_utils.jl")
+export direct_grid, reciprocal_grid,DFTGrid
 
 include("initial_profiles.jl")
 export lg,hg,diagonal_hg,lens,tilted_lens
