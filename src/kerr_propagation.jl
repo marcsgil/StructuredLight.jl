@@ -1,43 +1,36 @@
-function fourier_propagation_kernel(qs,k,z)
-    cis( - z * sum(abs2,qs) / (2k) )
-end
-
-function dispersion_step!(ψ,kernel,plan,iplan)
-    plan*ψ
-    map!(*,ψ,ψ,kernel)
-    iplan*ψ
-end
-
-evolve_phase(ψ,phase) = cis(phase) * ψ
-
-function type_2A_step!(ψ,phases,plan,iplan,factor,repetitions)
-    for _ in 1:repetitions
-        map!(ψ->evolve_phase(ψ,abs2(ψ)*factor/2),ψ,ψ)
-        dispersion_step!(ψ,phases,plan,iplan)
-        map!(ψ->evolve_phase(ψ,abs2(ψ)*factor/2),ψ,ψ)
-    end
-end
-
-function partition(a::Integer,b::Integer)
-    @assert a ≥ b
-
-    result = fill(a ÷ b, b)
-
-    for n in 1:mod(a,b)
-        result[n] +=1
-    end
-
-    result
-end
-
 function distribute(N,v)
-    δs = [ v[i] - v[i-1] for i in 2:length(v) ]
-
     Δ = v[end] - v[1]
     @assert Δ > 0 "The total interval is null"
 
-    result = [ round(Int, N * δs[n] / Δ, RoundUp) for n in 1:length(δs) - 1 ]
-    vcat(result, N - sum(result))
+    δs = [ v[i] - v[i-1] for i in 2:length(v) ]   
+    for δ in δs
+        @assert δ ≥ 0 "The vector `v` must be in crescent order"
+    end
+
+    [ round(Int, N * δ / Δ, RoundUp) for δ in δs ]
+end
+
+function type_2A_step!(ψ,phases,plan,iplan,factor,repetitions)
+    if !iszero(repetitions)
+        apply_kerr_phase!(ψ,factor/2)
+        for _ in 1:repetitions-1
+            dispersion_step!(ψ,phases,plan,iplan)
+            apply_kerr_phase!(ψ,factor)
+        end
+        dispersion_step!(ψ,phases,plan,iplan)
+        apply_kerr_phase!(ψ,factor/2)
+    end
+end
+
+function kerr_propagation_loop!(dest,ψ₀,kernel,phases,z,divisions,g,k,plan,iplan)
+    Δz = z / divisions
+    phase_evolution_factor = g * Δz / 2k
+
+    fourier_propagation_kernel!(kernel,phases,Δz)
+
+    type_2A_step!(ψ₀,kernel,plan,iplan,phase_evolution_factor,divisions)
+
+    fftshift!(dest, ψ₀)
 end
 
 """
@@ -56,29 +49,22 @@ function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
 
     steps = distribute(total_steps,Zs)
 
-    results = similar(ψ₀,size(ψ₀)...,length(zs))
+    result = similar(ψ₀,size(ψ₀)...,length(zs))
 
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
 
-    cache = ifftshift(ψ₀)
+    ψ = ifftshift(ψ₀)
 
-    ks = reciprocal_grid(xs,ys) |> collect |> ifftshift
+    qxs = reciprocal_grid(xs) |> ifftshift_view
+    qys = reciprocal_grid(ys) |> ifftshift_view
 
-    for (i,n) in enumerate(steps)
-        Δz = (Zs[i+1] - Zs[i])/n
-        phase_evolution_factor = g*Δz/(2k)
+    phases = reciprocal_quadratic_phase(qxs,qys,k)
+    kernel = similar(ψ₀)
 
-        kernel = convert(typeof(ψ₀), fourier_propagation_kernel.(ks,k,Δz))
-
-        type_2A_step!(cache,kernel,plan,iplan,phase_evolution_factor,n)
-
-        fftshift!(view(results,:,:,i), cache)
+    for (i,divisions) in enumerate(steps)
+        kerr_propagation_loop!(view(result,:,:,i),ψ,kernel,phases,Zs[i+1] - Zs[i],divisions,g,k,plan,iplan)
     end
 
-    if zs isa Number
-        dropdims(results,dims=3)
-    else
-        results
-    end
+    result
 end
