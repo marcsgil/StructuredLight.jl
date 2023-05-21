@@ -14,35 +14,28 @@ The output at a distance `z[n]` is calculated on a scalled grid defined by `scal
 
 `k` is the wavenumber.
 """
-function free_propagation(ψ₀,xs::DFTGrid,ys::DFTGrid,zs;k=1)
+function free_propagation(ψ₀,xs,ys,zs;k=1)
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = ifftshift(ψ₀)
+    shifted_ψ₀ = my_ifftshift(ψ₀)
 
     qxs = reciprocal_grid(xs,true)
     qys = reciprocal_grid(ys,true)
     
     ψ = _free_propagation!(shifted_ψ₀,qxs,qys,zs,k)
 
-    zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
+    zs isa Number ? dropdims( my_fftshift(ψ,(1,2)),dims=3) : my_fftshift(ψ,(1,2))
 end
 
 function _free_propagation!(ψ₀,qxs,qys,zs,k)
     fft!(ψ₀)
 
     @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    typeof(phases)
     @tullio ψ[i,j,l] := ψ₀[i,j] * cis( phases[i,j] * zs[l] )
 
     ifft!(ψ,(1,2))
 end
-
-function free_propagation(ψ₀,xs::AbstractArray,ys::AbstractArray,zs;k=1)
-    free_propagation(ψ₀,DFTGrid(xs),DFTGrid(ys),zs;k=1)
-end
-
-#=function free_propagation(ψ₀,xs,ys,z::Number;k=1)
-    dropdims(free_propagation(ψ₀,xs,ys,[z];k=k),dims=3)
-end=#
 
 function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
     @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
@@ -50,17 +43,17 @@ function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
 
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = ifftshift(ψ₀)
+    shifted_ψ₀ = my_ifftshift(ψ₀)
 
-    direct_xgrid = direct_grid(xs,true)
-    direct_ygrid = direct_grid(ys,true)
+    direct_xgrid = my_fftshift(xs)
+    direct_ygrid = my_fftshift(ys)
 
     qxs = reciprocal_grid(xs,true)
     qys = reciprocal_grid(ys,true)
     
     ψ = _free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,zs,qxs,qys,scaling,k)
 
-    zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
+    zs isa Number ? dropdims( my_fftshift(ψ,(1,2)),dims=3) : my_fftshift(ψ,(1,2))
 end
 
 function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
@@ -70,7 +63,7 @@ function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
     fft!(ψ,(1,2))
 
     @tullio reciprocal_phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
-    @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] )
+    @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] / scaling[l] )
 
     ifft!(ψ,(1,2))
     @tullio ψ[i,j,l] *= cis( - direct_phases[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])

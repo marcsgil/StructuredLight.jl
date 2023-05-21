@@ -10,15 +10,27 @@ function distribute(N,v)
     [ round(Int, N * δ / Δ, RoundUp) for δ in δs ]
 end
 
-function type_2A_step!(ψ,phases,plan,iplan,factor,repetitions)
+function dispersion_step!(ψ,kernel,plan,iplan)
+    plan*ψ
+    @tullio ψ[i,j] *= kernel[i,j]
+    iplan*ψ
+end
+
+function dispersion_step!(ψ::CuArray,kernel::CuArray,plan,iplan)
+    plan*ψ
+    ψ .*= kernel
+    iplan*ψ
+end
+
+function type_2A_step!(ψ,kernel,plan,iplan,factor,repetitions)
     if !iszero(repetitions)
-        apply_kerr_phase!(ψ,factor/2)
+        @tullio ψ[i,j] *= cis( factor * abs2(ψ[i,j]) / 2)
         for _ in 1:repetitions-1
-            dispersion_step!(ψ,phases,plan,iplan)
-            apply_kerr_phase!(ψ,factor)
+            dispersion_step!(ψ,kernel,plan,iplan)
+            @tullio ψ[i,j] *= cis( factor * abs2(ψ[i,j]) )
         end
-        dispersion_step!(ψ,phases,plan,iplan)
-        apply_kerr_phase!(ψ,factor/2)
+        dispersion_step!(ψ,kernel,plan,iplan)
+        @tullio ψ[i,j] *= cis( factor * abs2(ψ[i,j]) / 2)
     end
 end
 
@@ -26,7 +38,7 @@ function kerr_propagation_loop!(dest,ψ₀,kernel,phases,z,divisions,g,k,plan,ip
     Δz = z / divisions
     phase_evolution_factor = g * Δz / 2k
 
-    fourier_propagation_kernel!(kernel,phases,Δz)
+    @tullio kernel[i,j] = cis( Δz * phases[i,j] )
 
     type_2A_step!(ψ₀,kernel,plan,iplan,phase_evolution_factor,divisions)
 
@@ -45,7 +57,7 @@ The outputs are saved at every `zs`, which is a number or a collection of number
 `total_steps` is the number of steps over which we discretize the propagation. The larger the `total_steps`, the better the precision and the slower is the calculation.
 """
 function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
-    Zs = vcat(0,zs)
+    Zs = vcat(0,Array(zs))
 
     steps = distribute(total_steps,Zs)
 
@@ -56,10 +68,10 @@ function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
 
     ψ = ifftshift(ψ₀)
 
-    qxs = reciprocal_grid(xs) |> ifftshift_view
-    qys = reciprocal_grid(ys) |> ifftshift_view
+    qxs = reciprocal_grid(xs,true)
+    qys = reciprocal_grid(ys,true)
 
-    phases = reciprocal_quadratic_phase(qxs,qys,k)
+    @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
     kernel = similar(ψ₀)
 
     for (i,divisions) in enumerate(steps)
