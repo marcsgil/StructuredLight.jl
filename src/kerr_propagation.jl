@@ -16,12 +16,6 @@ function dispersion_step!(ψ,kernel,plan,iplan)
     iplan*ψ
 end
 
-function dispersion_step!(ψ::CuArray,kernel::CuArray,plan,iplan)
-    plan*ψ
-    ψ .*= kernel
-    iplan*ψ
-end
-
 function type_2A_step!(ψ,kernel,plan,iplan,factor,repetitions)
     if !iszero(repetitions)
         @tullio ψ[i,j] *= cis( factor * abs2(ψ[i,j]) / 2)
@@ -68,8 +62,8 @@ function kerr_propagation(ψ₀,xs,ys,zs,total_steps;k=1,g=1)
 
     ψ = ifftshift(ψ₀)
 
-    qxs = reciprocal_grid(xs,true)
-    qys = reciprocal_grid(ys,true)
+    qxs = reciprocal_grid(xs,shift=true)
+    qys = reciprocal_grid(ys,shift=true)
 
     @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
     kernel = similar(ψ₀)

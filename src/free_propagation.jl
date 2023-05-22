@@ -17,14 +17,14 @@ The output at a distance `z[n]` is calculated on a scalled grid defined by `scal
 function free_propagation(ψ₀,xs,ys,zs;k=1)
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = my_ifftshift(ψ₀)
+    shifted_ψ₀ = ifftshift(ψ₀)
 
-    qxs = reciprocal_grid(xs,true)
-    qys = reciprocal_grid(ys,true)
+    qxs = reciprocal_grid(xs,shift=true)
+    qys = reciprocal_grid(ys,shift=true)
     
     ψ = _free_propagation!(shifted_ψ₀,qxs,qys,zs,k)
 
-    zs isa Number ? dropdims( my_fftshift(ψ,(1,2)),dims=3) : my_fftshift(ψ,(1,2))
+    zs isa Number ? dropdims( fftshift_view(ψ,(1,2)),dims=3) : fftshift_view(ψ,(1,2))
 end
 
 function _free_propagation!(ψ₀,qxs,qys,zs,k)
@@ -39,21 +39,21 @@ end
 
 function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
     @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
-    CUDA.@allowscalar @assert 0 ∉ zs "This method does not support `zs` containing `0`"
+    @assert 0 ∉ zs "This method does not support `zs` containing `0`"
 
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = my_ifftshift(ψ₀)
+    shifted_ψ₀ = ifftshift_view(ψ₀)
 
-    direct_xgrid = my_fftshift(xs)
-    direct_ygrid = my_fftshift(ys)
+    direct_xgrid = fftshift_view(xs)
+    direct_ygrid = fftshift_view(ys)
 
-    qxs = reciprocal_grid(xs,true)
-    qys = reciprocal_grid(ys,true)
+    qxs = reciprocal_grid(xs,shift=true)
+    qys = reciprocal_grid(ys,shift=true)
     
     ψ = _free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,zs,qxs,qys,scaling,k)
 
-    zs isa Number ? dropdims( my_fftshift(ψ,(1,2)),dims=3) : my_fftshift(ψ,(1,2))
+    zs isa Number ? dropdims( fftshift_view(ψ,(1,2)),dims=3) : fftshift_view(ψ,(1,2))
 end
 
 function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)

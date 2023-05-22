@@ -1,12 +1,16 @@
 module StructuredLight
 
+if !isdefined(Base, :get_extension)
+    include("../ext/StructuredLightCUDAExt.jl")
+end
+
 using Reexport
 
 using FourierTools
 
 using Images, VideoIO
-@reexport using ColorSchemes, CUDA
-using Tullio, CUDAKernels, KernelAbstractions
+@reexport using ColorSchemes
+using Tullio
 import SpecialFunctions: beta 
 
 include("dft_utils.jl")
