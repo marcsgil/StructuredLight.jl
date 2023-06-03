@@ -1,4 +1,6 @@
-normalize(ψ::AbstractArray{T,2}) where T  = ψ/maximum(abs.(ψ))
+normalize(ψ::AbstractArray{T,2}) where T  = ψ/maximum(abs,ψ)
+
+normalize(ψ::AbstractArray{T,2}) where T <: Real  = (ψ .- minimum(ψ)) ./ (maximum(ψ) - minimum(ψ))
 
 function normalize(ψ::AbstractArray{T,3};normalize_by_first=false) where T
     result = similar(ψ)
