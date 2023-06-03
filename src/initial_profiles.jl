@@ -74,7 +74,7 @@ function lg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     α = 1/(1+im*z/(k*γ₀^2))
     prefactor = normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α))
 
-    @tullio result[i,j] := prefactor*core_lg(x[i],y[j],α,γ₀,l,coefs)
+    @tullio result[j,i] := prefactor*core_lg(x[i],y[j],α,γ₀,l,coefs)
 end
 
 function lg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
@@ -91,7 +91,7 @@ function lg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
         normalization_lg(p=p,l=l,γ₀=γ₀) * cis((2p+abs(l))*angle(α)) * core_lg(x,y,α,γ₀,l,coefs)
     end
 
-    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
+    @tullio result[j,i,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
 function lg(x::Real,y::Real,z::Real=0;
@@ -178,7 +178,7 @@ function hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    @tullio result[i,j] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,false)
+    @tullio result[j,i] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,false)
 end
 
 function hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
@@ -197,7 +197,7 @@ function hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,false)
     end
 
-    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
+    @tullio result[j,i,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
 function hg(x::Real,y::Real,z::Real=0;
@@ -249,7 +249,7 @@ function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     α = inv(1+im*z/(k*γ₀^2))
     prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
 
-    @tullio result[i,j] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,true)
+    @tullio result[j,i] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,true)
 end
 
 function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
@@ -268,7 +268,7 @@ function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector
         normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,true)
     end
 
-    @tullio result[i,j,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
+    @tullio result[j,i,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
 end
 
 function diagonal_hg(x::Real,y::Real,z::Real=0;
@@ -289,7 +289,7 @@ The calculation is done over a grid defined by `x` and `y`.
 To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(x,y,fx,fy;k=k)`
 """
 function lens(x,y,fx,fy;k=1)
-    @tullio result[i,j] := cis( -k * (x[i]^2/fx + y[j]^2/fy) / 2 )
+    @tullio result[j,i] := cis( -k * (x[i]^2/fx + y[j]^2/fy) / 2 )
 end
 
 """

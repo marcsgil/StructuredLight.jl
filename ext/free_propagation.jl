@@ -1,7 +1,7 @@
 function StructuredLight._free_propagation!(ψ₀::CuArray,qxs::CuArray,qys::CuArray,zs::CuArray,k)
     fft!(ψ₀)
 
-    @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
     typeof(phases)
     @tullio ψ[i,j,l] := ψ₀[i,j] * cis( phases[i,j] * zs[l] )
 
@@ -20,12 +20,12 @@ function StructuredLight.free_propagation(ψ₀::CuArray,xs,ys,zs;k=1)
 end
 
 function StructuredLight._free_propagation!(ψ₀::CuArray,xs::CuArray,ys::CuArray,zs::CuArray,qxs::CuArray,qys::CuArray,scaling::CuArray,k)
-    @tullio direct_phases[i,j] := k * ( xs[i]^2 + ys[j]^2 ) / 2
+    @tullio direct_phases[i,j] := k * ( xs[j]^2 + ys[i]^2 ) / 2
     @tullio ψ[i,j,l] := ψ₀[i,j] * cis( direct_phases[i,j] * ( 1 - scaling[l] ) / zs[l] ) / scaling[l]
 
     fft!(ψ,(1,2))
 
-    @tullio reciprocal_phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio reciprocal_phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
     @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] / scaling[l] )
 
     ifft!(ψ,(1,2))

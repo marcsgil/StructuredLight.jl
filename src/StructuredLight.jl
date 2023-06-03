@@ -31,4 +31,6 @@ export kerr_propagation,kerr_propagation_old
 include("misc.jl")
 export overlap
 
+include("slm_hologram.jl")
+
 end

@@ -30,7 +30,7 @@ end
 function _free_propagation!(ψ₀,qxs,qys,zs,k)
     fft!(ψ₀)
 
-    @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
     typeof(phases)
     @tullio ψ[i,j,l] := ψ₀[i,j] * cis( phases[i,j] * zs[l] )
 
@@ -57,12 +57,12 @@ function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
 end
 
 function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
-    @tullio direct_phases[i,j] := k * ( xs[i]^2 + ys[j]^2 ) / 2
+    @tullio direct_phases[i,j] := k * ( xs[j]^2 + ys[i]^2 ) / 2
     @tullio ψ[i,j,l] := ψ₀[i,j] * cis( direct_phases[i,j] * ( 1 - scaling[l] ) / zs[l] ) / scaling[l]
 
     fft!(ψ,(1,2))
 
-    @tullio reciprocal_phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio reciprocal_phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
     @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] / scaling[l] )
 
     ifft!(ψ,(1,2))

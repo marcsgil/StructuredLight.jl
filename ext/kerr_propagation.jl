@@ -42,7 +42,7 @@ function StructuredLight.kerr_propagation(ψ₀::CuArray,xs,ys,zs,total_steps;k=
     qxs = StructuredLight.reciprocal_grid(xs,shift=true) |> CuArray
     qys = StructuredLight.reciprocal_grid(ys,shift=true) |> CuArray
 
-    @tullio phases[i,j] := - ( qxs[i]^2 + qys[j]^2 ) / 2k
+    @tullio phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
     kernel = similar(ψ₀)
 
     for (i,divisions) in enumerate(steps)
