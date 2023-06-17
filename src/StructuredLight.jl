@@ -26,11 +26,9 @@ include("free_propagation.jl")
 export free_propagation
 
 include("kerr_propagation.jl")
-export kerr_propagation,kerr_propagation_old
+export kerr_propagation
 
 include("misc.jl")
 export overlap
-
-include("slm_hologram.jl")
 
 end

@@ -4,7 +4,7 @@
 
 In this example, we reproduce the results of [this work](https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
 
-```julia
+```@example
 #Here, we initialize the package and define the experimental parameters:
 using StructuredLight
 
@@ -29,8 +29,8 @@ rs = LinRange(-70w0,70w0,1024)
 # Note that we introduce scalings, because, otherwise, the beam would be to small.
 zs = z_cr .* LinRange(.97,1.03,64)
 scalings = 0.015 .* vcat(LinRange(2.4,1,32),LinRange(1,2.4,32))
-ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scaling=scalings)
-anim = show_animation(ψ,ratio=1/4)
+ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scalings)
+anim = show_animation(ψ,ratio=1/2,fps=12)
 ```
 
 By changing the initial angular momentum, one obtains different HG modes.
@@ -39,7 +39,7 @@ By changing the initial angular momentum, one obtains different HG modes.
 
 Here, we reproduce the results of [this work](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
 
-```julia
+```@example
 #First we import the package.
 using StructuredLight
 
@@ -71,7 +71,7 @@ zᵣ = 1/2;
 
 # This would be the figure 1:
 rs = LinRange(-10,10,512)
-visualize(get_images(rs,ms,2,-4zᵣ,15,10))
+visualize(get_images(rs,ms,2,-4zᵣ,15,10),ratio=2)
 ```
 
 The other figures are just a variation of this one, by changing the distance from the waist and `n`.

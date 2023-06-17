@@ -10,7 +10,7 @@ free_propagation
 
 ### Examples:
 
-```julia
+```@example
 #The simplest usage would be the following:
 using StructuredLight
 
@@ -25,7 +25,7 @@ rs = LinRange(-6,6,256)
 visualize([ψ₀,ψ] |> stack,ratio=2)
 ```
 
-```julia
+```@example
 #We can also provide a collection of z values to produce an animation:
 using StructuredLight
 
@@ -41,11 +41,11 @@ zs = LinRange(0,1,64)
 show_animation(ψs,ratio=2)
 ```
 
-```julia
+```@example
 using StructuredLight
 
 rs = LinRange(-4,4,256)
-zs = LinRange(0,1/2,32)
+zs = LinRange(.01,1/2,32)
 
 #This is a gaussian mode
 ψ₀ = lg(rs,rs)
@@ -66,7 +66,7 @@ kerr_propagation
 ```
 
 ### Example 
-```julia
+```@example
 using StructuredLight
 
 rs = LinRange(-2.5,2.5,256) #The transverse grid
@@ -77,15 +77,16 @@ zs = LinRange(0,.1,32) #The z grid
 #We perform the propagation with a strong nonlinearity
 ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=100)
 
-show_animation(ψ) #The beam colapses due to the self focusing effect
+show_animation(ψ,ratio=2) #The beam colapses due to the self focusing effect
 ```
 
 ## CUDA support
 
-Both `free_propagation` and `kerr_propagation` can be run on Nvidia GPUs, which will greatly improve the performance of these functions. If you have one, you simply need to convert your initial profile to a `CuArray` and pass this converted array to the propagation methods (check the [CUDA.jl documentation](https://cuda.juliagpu.org/stable/) for more details). Then, [multiple dispatch](https://docs.julialang.org/en/v1/manual/methods/#Methods) will do its magic!
+Both `free_propagation` and `kerr_propagation` can be run on Nvidia GPUs, which will greatly improve the performance of these functions. If you have one, you simply need to convert your initial profile to a `CuArray` and pass this converted array to the propagation methods (check the [CUDA.jl documentation](https://cuda.@examplegpu.org/stable/) for more details). Then, [multiple dispatch](https://docs.@examplelang.org/en/v1/manual/methods/#Methods) will do its magic!
 
 Here is an example:
 ```julia
+using StructuredLight
 using CUDA #It is necessary to load the CUDA package
 
 ψ₀ = lg(rs,rs) |> cu #Transfers array to GPU

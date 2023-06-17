@@ -1,31 +1,16 @@
-normalize(ψ::AbstractArray{T,2}) where T  = ψ/maximum(abs,ψ)
+convert2color(x::Real,colormap,normalization) = convert(RGB{N0f8}, get(colorschemes[colormap], normalization(x)))
+convert2color(x,colormap,normalization) = convert(RGB{N0f8}, get(colorschemes[colormap], normalization(abs2(x))))
 
-normalize(ψ::AbstractArray{T,2}) where T <: Real  = (ψ .- minimum(ψ)) ./ (maximum(ψ) - minimum(ψ))
-
-function normalize(ψ::AbstractArray{T,3};normalize_by_first=false) where T
-    result = similar(ψ)
-    if normalize_by_first
-        result = ψ/maximum(abs.(view(ψ,:,:,1)))
-    else
-        for n in axes(ψ,3)
-            result[:,:,n] = view(ψ,:,:,n)/maximum(abs.(view(ψ,:,:,n)))
-        end
-    end
-    result
+function convert2image!(dest,src,colormap,normalization)
+    @tullio dest[n] = convert2color(src[n],colormap,normalization)
 end
 
-function convert2image(ψ::AbstractArray{T,N}; colormap=:hot,ratio=1) where {T <: Real ,N}
-    imresize(map( pixel -> convert(RGB{N0f8}, get(colorschemes[colormap], pixel)), Array(ψ) ), ratio=ratio)
-end
-
-function convert2image(ψ::AbstractArray{T,N};colormap=:hot,ratio=1) where {T,N}
-    convert2image(abs2.(ψ);colormap=colormap,ratio=ratio)
-end
+Base.extrema(itr::AbstractArray{Complex{T}}) where {T <: Real} = extrema(abs2,itr)
 
 """
-    visualize(ψ::AbstractArray{T,2}; colormap=:hot, ratio=1) where T
-    visualize(ψ::AbstractArray{T,3}; colormap=:hot, ratio=1) where T
-    visualize(ψ::AbstractArray{T,4}; colormap=:hot, ratio=1) where T
+    visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1,range=extrema(ψ)) where T
+    visualize(ψ::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T
+    visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_first=false) where T
 
 Vizualize the beam described by array `ψ`. 
 
@@ -37,21 +22,39 @@ When using the 3D Array signature, the third dimension is interpreted as definin
 
 When using the 4D Array signature, the third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 """
-function visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1) where T
-    convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)
+function visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1,range=extrema(ψ)) where T
+    img = similar(ψ,RGB{N0f8})
+    convert2image!(img,ψ,colormap,scaleminmax(range...))
+    imresize(img; ratio)
+end
+
+function _visualize(ψ::AbstractArray{T,3}; colormap=:hot,normalize_by_first=false) where T
+    img = similar(ψ,RGB{N0f8})
+
+    if normalize_by_first
+        range = extrema(view(ψ,:,:,1))
+    end
+
+    for n in axes(ψ,3)
+        if !normalize_by_first
+            range = extrema(view(ψ,:,:,n))
+        end
+        convert2image!(view(img,:,:,n),view(ψ,:,:,n),colormap,scaleminmax(range...))
+    end
+
+    img
 end
 
 function visualize(ψ::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T
-    convert2image(hcat(eachslice(normalize(Array(ψ),normalize_by_first=normalize_by_first),dims=3)...),colormap=colormap,ratio=ratio)
+    MosaicView(imresize(_visualize(ψ; colormap,normalize_by_first),ratio=(ratio,ratio,1))) |> permutedims
 end
 
 function visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_first=false) where T
-    vcat(visualize.( eachslice(Array(ψ),dims=4),colormap=colormap,ratio=ratio,normalize_by_first=normalize_by_first )...)
+    vcat((visualize(slice; colormap,ratio,normalize_by_first) for slice in eachslice(ψ,dims=4))...)
 end
 
-
 """
-    show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
+    show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16,normalize_by_first=false) where T 
 
 Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on VSCode, but not on Jupyter.
 
@@ -61,8 +64,8 @@ The image is rescaled by `ratio`.
 
 `normalize_by_first` defines if the intensities should be normalized by the first image.
 """
-function show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16) where T 
-    Images.gif([convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio) for ψ in eachslice(ψs,dims=3)],fps=fps)
+function show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16,normalize_by_first=false) where T 
+    Images.gif(imresize(_visualize(ψs; colormap,normalize_by_first),ratio=(ratio,ratio,1)); fps)
 end
 
 """
@@ -81,7 +84,7 @@ The image is rescaled by `ratio`.
 Follow the [VideoIO.jl documentation](https://juliaio.github.io/VideoIO.jl/stable/writing/) for more information on `encoder_options`.
 """
 function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot,ratio=1,fps=16, encoder_options = nothing) where T
-    imgstack = [RGB{N0f8}.(convert2image(normalize(Array(ψ)),colormap=colormap,ratio=ratio)) for ψ in eachslice(ψs,dims=3)]
+    imgstack = visualize.(eachslice(ψs,dims=3); colormap,ratio)
     if isnothing(encoder_options)
         VideoIO.save(path, imgstack, framerate=fps)
     else

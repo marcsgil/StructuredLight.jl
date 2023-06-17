@@ -12,7 +12,7 @@ visualize
 
 ### Example:
 
-```julia
+```@example
 using StructuredLight
 
 rs = LinRange(-4,4,256) 
@@ -27,7 +27,7 @@ visualize(ψ₂) #Displays ψ₂
 
 ψ₃ = stack([ψ₁,ψ₂])
 
-visualize(ψ₃) #Displays ψ₁ and ψ₂ in a row.
+visualize(ψ₃,ratio=2) #Displays ψ₁ and ψ₂ in a row.
 ``` 
 
 With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kinds of animations. 
@@ -42,7 +42,7 @@ show_animation
 
 ### Example:
 
-```julia
+```@example
 using StructuredLight
 
 rs = LinRange(-6,6,256) 
@@ -52,7 +52,7 @@ zs = LinRange(0,1,32)
 
 ψs = free_propagation(ψ₀,rs,rs,zs)
 
-show_animation(ψs,fps=12)
+show_animation(ψs,fps=12,ratio=2)
 ```
 
 ## `save_animation`
