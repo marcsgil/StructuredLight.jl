@@ -10,3 +10,7 @@ makedocs(
         "miscellany.md",
         "examples.md" ]
     )
+
+deploydocs(
+    repo = "https://github.com/marcsgil/StructuredLight.jl.git",
+)

@@ -2,11 +2,6 @@
 
 This package provides tools to simulate the propagation of paraxial light beams. This includes the calculation of [Laguerre-Gauss](@ref) and [Hermite-Gauss](@ref) beam profiles, the action of [Lenses](@ref), the propagation in free space ([`free_propagation`](@ref)) as well as in Kerr media ([`kerr_propagation`](@ref)). Both the propagation methods can be run on Nvidia GPUs (check [CUDA support](@ref) for details). We also provide methods that help the [Visualization](@ref) of such beams.
 
-The package is not yet registered, but you can use it by hitting `]` to enter the Pkg REPL-mode and then typing
-
-```
-add https://github.com/marcsgil/StructuredLight.jl
-```
 ## Minimal Example
 
 The following code is a minimal working example for this package:
@@ -39,7 +34,3 @@ Pages = [
         "examples.md"
     ]
 ```
-
-## Perspectives
-
-Currently, I'm studying the propagation of light in media with second order non-linearity and through turbulence. Depending on my advances, I may include functionalities covering these topics.

@@ -2,7 +2,7 @@
 
 ## Astigmatic Conversion
 
-In this example, we reproduce the results of [this work](https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
+In this example, we reproduce the results of [Pravin Vaity et al., "Measuring topological charge of optical vortices using a tilted convex lens," Phys. Lett. A, vol. 377, no. 15, pp. 1154-1156, 2013. DOI: 10.1016/j.physleta.2013.02.030](https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
 
 ```@example
 #Here, we initialize the package and define the experimental parameters:
@@ -37,7 +37,7 @@ By changing the initial angular momentum, one obtains different HG modes.
 
 ## Diffraction Rings in Kerr Media
 
-Here, we reproduce the results of [this work](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
+Here, we reproduce the results of [E. V. Garcia Ramirez, M. L. Arroyo Carrasco, M. M. Mendez Otero, S. Chavez Cerda, and M. D. Iturbe Castillo, "Far field intensity distributions due to spatial self phase modulation of a Gaussian beam by a thin nonlocal nonlinear media," Opt. Express 18, 22067-22079 (2010)](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
 
 ```@example
 #First we import the package.
