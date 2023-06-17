@@ -4,7 +4,6 @@ authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 CUDAKernels = "72cfdca4-0801-4ab0-bf6a-d52aa10adc57"
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"
@@ -24,6 +23,15 @@ StructuredLightCUDAExt = "CUDA"
 
 [compat]
 julia = "1.9"
+CUDAKernels = "0.4.7"
+ColorSchemes = "3.21.0"
+FourierTools = "0.4.2"
+Images = "0.25.3"
+KernelAbstractions = "0.8.6"
+Reexport = "1.2.2"
+SpecialFunctions = "2.2.0"
+Tullio = "0.3.5"
+VideoIO = "1.0.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

@@ -22,7 +22,7 @@ When using the 3D Array signature, the third dimension is interpreted as definin
 
 When using the 4D Array signature, the third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 """
-function visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1,range=extrema(ψ)) where T
+function visualize(ψ::AbstractMatrix{T}; colormap=:hot,ratio=1,range=extrema(ψ)) where T 
     img = similar(ψ,RGB{N0f8})
     convert2image!(img,ψ,colormap,scaleminmax(range...))
     imresize(img; ratio)

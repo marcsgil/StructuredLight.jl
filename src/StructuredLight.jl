@@ -1,9 +1,5 @@
 module StructuredLight
 
-if !isdefined(Base, :get_extension)
-    include("../ext/StructuredLightCUDAExt.jl")
-end
-
 using Reexport
 
 using FourierTools
