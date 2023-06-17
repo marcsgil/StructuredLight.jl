@@ -39,3 +39,6 @@ E0 = lg(rs,rs) |> cu #Transfers array to gpu
 E = free_propagation(E0,rs,rs,zs)
 ```
 
+## Perspectives
+
+Currently, I'm studying the propagation of light in media with second order non-linearity and through turbulence. Depending on my advances, I may include functionalities covering these topics.
