@@ -1,4 +1,6 @@
-# Introduction
+# StructuredLight.jl
+
+## Introduction
 
 This package provides tools to simulate the propagation of paraxial light beams. This includes the calculation of Laguerre-Gauss and Hermite-Gauss beam profiles, the action of lenses, the propagation in free space as well as in Kerr media. We also provide methods that help the visualization of such beams.
 
@@ -7,6 +9,10 @@ The package is not yet registered, but you can use it by hitting `]` to enter th
 ```
 add https://github.com/marcsgil/StructuredLight.jl
 ```
+## Documentation
+
+- [**STABLE**](https://marcsgil.github.io/StructuredLight.jl/dev/)
+  
 ## Example
 
 The following code is a minimal working exemple for this package:
