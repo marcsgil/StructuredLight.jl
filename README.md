@@ -4,7 +4,7 @@ This package provides tools to simulate the propagation of paraxial light beams.
 
 The package is not yet registered, but you can use it by hitting `]` to enter the Pkg REPL-mode and then typying
 
-```
+```julia
 add https://github.com/marcsgil/StructuredLight.jl
 ```
 ## Documentation
