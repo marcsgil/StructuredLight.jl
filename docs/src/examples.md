@@ -37,7 +37,7 @@ By changing the initial angular momentum, one obtains different HG modes.
 
 ## Diffraction Rings in Kerr Media
 
-Here, we reproduce the results of [E. V. Garcia Ramirez, M. L. Arroyo Carrasco, M. M. Mendez Otero, S. Chavez Cerda, and M. D. Iturbe Castillo, "Far field intensity distributions due to spatial self phase modulation of a Gaussian beam by a thin nonlocal nonlinear media," Opt. Express 18, 22067-22079 (2010)](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a gaussian beam after it crosses a nonlinear medium.
+Here, we reproduce the results of [E. V. Garcia Ramirez, M. L. Arroyo Carrasco, M. M. Mendez Otero, S. Chavez Cerda, and M. D. Iturbe Castillo, "Far field intensity distributions due to spatial self phase modulation of a Gaussian beam by a thin nonlocal nonlinear media," Opt. Express 18, 22067-22079 (2010)](https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&id=206115), where it is studied the appearance of rings in the far field profile of a Gaussian beam after it crosses a nonlinear medium.
 
 ```@example
 #First we import the package.

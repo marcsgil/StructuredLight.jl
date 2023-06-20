@@ -59,6 +59,10 @@ scalings = @. √(1+4*zs^2) #Here, we introduce the scalings given by w(z)/w0
 show_animation(ψs,ratio=2)
 ```
 
+### References
+
+The book "Schmidt, J. D. (2010). Numerical Simulation of Optical Wave Propagation with Examples in MATLAB. United States: SPIE." is a great resource to learn about numerical propagation of paraxial light beams
+
 ## `kerr_propagation`
 
 ```@docs
@@ -79,6 +83,10 @@ zs = LinRange(0,.1,32) #The z grid
 
 show_animation(ψ,ratio=2) #The beam colapses due to the self focusing effect
 ```
+
+### References
+
+The package [NonlinearSchrodinger.jl](https://github.com/oashour/NonlinearSchrodinger.jl/tree/master) has more available solvers for this equation, but, as far as I can see, it only works with one spatial dimensional. Its author has also written [a paper](https://arxiv.org/abs/2103.14469) that explains the theory that goes behind the numerical solution.
 
 ## CUDA support
 
