@@ -2,7 +2,7 @@ module StructuredLight
 
 using Reexport
 
-using FourierTools
+using FourierTools, LinearAlgebra
 
 using Images, VideoIO
 @reexport using ColorSchemes
