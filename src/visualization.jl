@@ -46,7 +46,7 @@ function _visualize(ψ::AbstractArray{T,3}; colormap=:hot,normalize_by_first=fal
 end
 
 function visualize(ψ::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T
-    MosaicView(imresize(_visualize(ψ; colormap,normalize_by_first),ratio=(ratio,ratio,1))) |> permutedims
+    MosaicView(imresize(_visualize(ψ; colormap,normalize_by_first),ratio=(ratio,ratio,1)))
 end
 
 function visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_first=false) where T

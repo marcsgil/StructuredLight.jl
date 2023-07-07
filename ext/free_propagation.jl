@@ -1,3 +1,6 @@
+gpu(x::Number) = CuArray([x])
+gpu(x::AbstractArray) = CuArray(x)
+
 function StructuredLight._free_propagation!(ψ₀::CuArray,qxs::CuArray,qys::CuArray,zs::CuArray,k)
     fft!(ψ₀)
 
@@ -14,7 +17,7 @@ function StructuredLight.free_propagation(ψ₀::CuArray,xs,ys,zs;k=1)
     qxs = StructuredLight.reciprocal_grid(xs,shift=true) |> CuArray
     qys = StructuredLight.reciprocal_grid(ys,shift=true) |> CuArray
     
-    ψ = StructuredLight._free_propagation!(shifted_ψ₀,qxs,qys,CuArray(zs),k)
+    ψ = StructuredLight._free_propagation!(shifted_ψ₀,qxs,qys,gpu(zs),k)
 
     zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
 end
@@ -44,7 +47,7 @@ function StructuredLight.free_propagation(ψ₀::CuArray,xs,ys,zs,scaling;k=1)
     qxs = StructuredLight.reciprocal_grid(xs,shift=true) |> CuArray
     qys = StructuredLight.reciprocal_grid(ys,shift=true) |> CuArray
     
-    ψ = StructuredLight._free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,CuArray(zs),qxs,qys,CuArray(scaling),k)
+    ψ = StructuredLight._free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,gpu(zs),qxs,qys,gpu(scaling),k)
 
     zs isa Number ? dropdims( fftshift(ψ,(1,2)),dims=3) : fftshift(ψ,(1,2))
 end

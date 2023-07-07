@@ -1,7 +1,7 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 CUDAKernels = "72cfdca4-0801-4ab0-bf6a-d52aa10adc57"
@@ -35,6 +35,7 @@ VideoIO = "1.0.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 
 [targets]
-test = ["Test"]
+test = ["Test","CUDA"]
