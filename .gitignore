@@ -3,3 +3,4 @@
 /docs/Manifest.toml
 /.vscode/
 /TestEnv/
+test.jl
