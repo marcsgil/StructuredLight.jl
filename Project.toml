@@ -1,7 +1,7 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
-version = "0.1.3"
+version = "0.1.4"
 
 [deps]
 CUDAKernels = "72cfdca4-0801-4ab0-bf6a-d52aa10adc57"
