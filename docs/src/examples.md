@@ -1,5 +1,27 @@
 # Examples
 
+## Mode Converter
+
+
+In this example, we reproduce the results of [Beijersbergen, Marco W., et al. "Astigmatic laser mode converters and transfer of orbital angular momentum." Optics Communications 96.1-3 (1993): 123-132.](https://www.sciencedirect.com/science/article/pii/003040189390535D), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
+
+```@example
+using StructuredLight
+k = 1
+f = √2
+d = f / √2
+w0 = √((2 + √2) * f / k)
+rs = LinRange(-4w0, 4w0, 512)
+zs = LinRange(0, 2d, 64)
+##
+ψ₀ = lg(rs, rs, -d; w0, k, l=1, p=0) .* lens(rs, rs, Inf, f; k)
+ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
+ψs = free_propagation(ψ₀, rs, rs, zs; k)
+
+visualize(ψ₀)
+visualize(ψ₁)
+```
+
 ## Astigmatic Conversion
 
 In this example, we reproduce the results of [Pravin Vaity et al., "Measuring topological charge of optical vortices using a tilted convex lens," Phys. Lett. A, vol. 377, no. 15, pp. 1154-1156, 2013. DOI: 10.1016/j.physleta.2013.02.030](https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
