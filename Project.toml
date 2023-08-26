@@ -22,7 +22,6 @@ CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 StructuredLightCUDAExt = "CUDA"
 
 [compat]
-julia = "1.9"
 CUDAKernels = "0.4.7"
 ColorSchemes = "3.21.0"
 FourierTools = "0.4.2"
@@ -32,10 +31,11 @@ Reexport = "1.2.2"
 SpecialFunctions = "2.2.0"
 Tullio = "0.3.5"
 VideoIO = "1.0.6"
+julia = "1.9"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test","CUDA"]
+test = ["Test", "CUDA"]

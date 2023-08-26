@@ -7,7 +7,7 @@ using FourierTools, LinearAlgebra
 using Images, VideoIO
 @reexport using ColorSchemes
 using Tullio
-import SpecialFunctions: beta 
+import SpecialFunctions: beta, erf
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
