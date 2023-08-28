@@ -70,6 +70,10 @@ function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
 end
 
 function non_spectral_propagation(ψ₀,xs,ys,z;k=1)
-    @tullio kernel[i,j] := cis(k * (xs[j]^2 + ys[i]^2) / 2z)
-    fftshift(ifft(fft((ψ₀)) .* fft((kernel))))
+    Δx = xs[2] - xs[1]
+    Δy = ys[2] - ys[1]
+    α = √(k/(2im*z))
+    kernel = similar(ψ₀)
+    @tullio kernel[i,j] = π / 4 * (erf(α*(j+1)*Δx) - erf(α*j*Δx) ) * (erf(α*(i+1)*Δy) - erf(α*i*Δy) )
+    (ifft(fft((ifftshift(ψ₀))) .* fft((ifftshift(kernel)))))
 end
