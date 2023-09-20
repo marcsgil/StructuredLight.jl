@@ -121,9 +121,17 @@ hermite(x,n,coefs) = iseven(n) ? evalpoly(4x^2,coefs) : 2x*evalpoly(4x^2,coefs)
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
-function normalization_hg(;m,n,γ₀=1)
+function normalization_hg(m,n,γ₀)
     try
         oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(n)*factorial(m)))))
+    catch
+        oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(big(n))*factorial(big(m))))))
+    end
+end
+
+function normalization_hg(n,γ₀)
+    try
+        oftype(float(γ₀), inv( ( pi^(1//4) * √( γ₀*2^(n)*factorial(n)))) )
     catch
         oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(big(n))*factorial(big(m))))))
     end
@@ -133,6 +141,11 @@ function core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,isdiagonal)
     ξ = isdiagonal ? (x+y)/( √2 * γ₀) : x/γ₀
     η = isdiagonal ? (x-y)/( √2 * γ₀) : y/γ₀
     α*exp(-α*(ξ^2+η^2)/2)*hermite(abs(α)*ξ,m,x_coefs)*hermite(abs(α)*η,n,y_coefs)
+end
+
+function core_hg(x,α,γ₀,n,x_coefs)
+    ξ = x/γ₀
+    α*exp(-α*ξ^2/2)*hermite(abs(α)*ξ,n,x_coefs)
 end
 
 """
@@ -176,7 +189,7 @@ function hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     y_coefs = hermite_coefficients(n)
 
     α = inv(1+im*z/(k*γ₀^2))
-    prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
+    prefactor = normalization_hg(m,n,γ₀) * cis((m+n)*angle(α))
 
     @tullio result[j,i] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,false)
 end
@@ -194,7 +207,7 @@ function hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
     y_coefs = hermite_coefficients(n)
 
     function f(x,y,α)
-        normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,false)
+        normalization_hg(m,n,γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,false)
     end
 
     @tullio result[j,i,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
@@ -203,7 +216,24 @@ end
 function hg(x::Real,y::Real,z::Real=0;
     m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1)
 
-    first(hg([x],[y],z,m=m,n=n,k=k,w0=w0))
+    first(hg([x],[y];z,m,n,k,w0))
+end
+
+function hg(x::AbstractVector{T},z::Real=0;
+    n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+    #TODO: The normalization only works for z=0
+
+    @assert n ≥ 0
+
+    γ₀ = convert(float(T),w0/√2)
+    k = convert(float(T),k)
+
+    x_coefs = hermite_coefficients(n)
+
+    α = inv(1+im*z/(k*γ₀^2))
+    prefactor = normalization_hg(n,γ₀) * cis(n*angle(α))
+
+    @tullio result[i] := prefactor*core_hg(x[i],α,γ₀,n,x_coefs)
 end
 
 """
@@ -247,7 +277,7 @@ function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
     y_coefs = hermite_coefficients(n)
 
     α = inv(1+im*z/(k*γ₀^2))
-    prefactor = normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α))
+    prefactor = normalization_hg(m,n,γ₀) * cis((m+n)*angle(α))
 
     @tullio result[j,i] := prefactor*core_hg(x[i],y[j],α,γ₀,m,n,x_coefs,y_coefs,true)
 end
@@ -265,7 +295,7 @@ function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector
     y_coefs = hermite_coefficients(n)
 
     function f(x,y,α)
-        normalization_hg(m=m,n=n,γ₀=γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,true)
+        normalization_hg(m,n,γ₀) * cis((m+n)*angle(α)) * core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,true)
     end
 
     @tullio result[j,i,l] := f(x[i],y[j],inv(1+im*z[l]/(k*γ₀^2)))
