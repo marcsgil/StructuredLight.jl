@@ -8,9 +8,9 @@ end
 Base.extrema(itr::AbstractArray{Complex{T}}) where {T<:Real} = extrema(abs2, itr)
 
 """
-    visualize(ψ::AbstractArray{T,2}; colormap=:hot,ratio=1,range=extrema(ψ)) where T
-    visualize(ψ::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T
-    visualize(ψ::AbstractArray{T,4}; colormap=:hot,ratio=1,normalize_by_first=false) where T
+    visualize(ψ::AbstractArray{T,2}; colormap=:jet,ratio=1,range=extrema(ψ)) where T
+    visualize(ψ::AbstractArray{T,3}; colormap=:jet,ratio=1,normalize_by_first=false) where T
+    visualize(ψ::AbstractArray{T,4}; colormap=:jet,ratio=1,normalize_by_first=false) where T
 
 Vizualize the beam described by array `ψ`. 
 
@@ -22,13 +22,13 @@ When using the 3D Array signature, the third dimension is interpreted as definin
 
 When using the 4D Array signature, the third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 """
-function visualize(ψ::AbstractArray{T,2}; colormap=:hot, ratio=1, range=extrema(ψ)) where {T}
+function visualize(ψ::AbstractArray{T,2}; colormap=:jet, ratio=1, range=extrema(ψ)) where {T}
     img = similar(ψ, RGB{N0f8})
     convert2image!(img, ψ, colormap, scaleminmax(range...))
     imresize(img; ratio)
 end
 
-function _visualize(ψ::AbstractArray{T,3}; colormap=:hot, normalize_by_first=false) where {T}
+function _visualize(ψ::AbstractArray{T,3}; colormap=:jet, normalize_by_first=false) where {T}
     img = similar(ψ, RGB{N0f8})
 
     if normalize_by_first
@@ -45,17 +45,17 @@ function _visualize(ψ::AbstractArray{T,3}; colormap=:hot, normalize_by_first=fa
     img
 end
 
-function visualize(ψ::AbstractArray{T,3}; colormap=:hot, ratio=1, normalize_by_first=false) where {T}
+function visualize(ψ::AbstractArray{T,3}; colormap=:jet, ratio=1, normalize_by_first=false) where {T}
     img = _visualize(ψ; colormap, normalize_by_first)
     imresize(hcat((slice for slice in eachslice(img, dims=3))...); ratio)
 end
 
-function visualize(ψ::AbstractArray{T,4}; colormap=:hot, ratio=1, normalize_by_first=false) where {T}
+function visualize(ψ::AbstractArray{T,4}; colormap=:jet, ratio=1, normalize_by_first=false) where {T}
     vcat((visualize(slice; colormap, ratio, normalize_by_first) for slice in eachslice(ψ, dims=4))...)
 end
 
 """
-    show_animation(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,fps=16,normalize_by_first=false) where T 
+    show_animation(ψs::AbstractArray{T,3}; colormap=:jet,ratio=1,fps=16,normalize_by_first=false) where T 
 
 Open a gif showing a visualization of `ψs`with a framerate of `fps`. It displays properly on VSCode, but not on Jupyter.
 
@@ -65,13 +65,13 @@ The image is rescaled by `ratio`.
 
 `normalize_by_first` defines if the intensities should be normalized by the first image.
 """
-function show_animation(ψs::AbstractArray{T,3}; colormap=:hot, ratio=1, fps=16, normalize_by_first=false) where {T}
+function show_animation(ψs::AbstractArray{T,3}; colormap=:jet, ratio=1, fps=16, normalize_by_first=false) where {T}
     Images.gif(imresize(_visualize(ψs; colormap, normalize_by_first), ratio=(ratio, ratio, 1)); fps)
 end
 
 """
     save_animation(ψs::AbstractArray{T,3}, path; 
-    colormap=:hot,
+    colormap=:jet,
     ratio=1,
     fps=16, 
     encoder_options = nothing) where T
@@ -84,7 +84,7 @@ The image is rescaled by `ratio`.
 
 Follow the [VideoIO.jl documentation](https://juliaio.github.io/VideoIO.jl/stable/writing/) for more information on `encoder_options`.
 """
-function save_animation(ψs::AbstractArray{T,3}, path; colormap=:hot, ratio=1, fps=16, encoder_options=nothing) where {T}
+function save_animation(ψs::AbstractArray{T,3}, path; colormap=:jet, ratio=1, fps=16, encoder_options=nothing) where {T}
     imgstack = visualize.(eachslice(ψs, dims=3); colormap, ratio)
     if isnothing(encoder_options)
         VideoIO.save(path, imgstack, framerate=fps)
@@ -99,7 +99,7 @@ Therefore, I'm disabiling this functionality for now.
 
 """
     interactive_visualization(ψs::AbstractArray{T,3}; 
-        colormap=:hot,
+        colormap=:jet,
         ratio=1,
         normalize_by_first=false) where T 
 
@@ -111,7 +111,7 @@ The image is rescaled by `ratio`.
 
 `normalize_by_first` defines if the intensities should be normalized by the first image.
 """
-function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:hot,ratio=1,normalize_by_first=false) where T 
+function interactive_visualization(ψs::AbstractArray{T,3}; colormap=:jet,ratio=1,normalize_by_first=false) where T 
     imshow(convert2image(normalize(Array(ψs),normalize_by_first=normalize_by_first),colormap=colormap,ratio=ratio))
 end
 =#
