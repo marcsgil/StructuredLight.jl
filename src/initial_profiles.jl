@@ -122,19 +122,21 @@ hermite(x,n,coefs) = iseven(n) ? evalpoly(4x^2,coefs) : 2x*evalpoly(4x^2,coefs)
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
 function normalization_hg(m,n,γ₀)
-    try
+    #=try
         oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(n)*factorial(m)))))
     catch
         oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(big(n))*factorial(big(m))))))
-    end
+    end=#
+    oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(n)*factorial(m)))))
 end
 
 function normalization_hg(n,γ₀)
-    try
+    #=try
         oftype(float(γ₀), inv( ( pi^(1//4) * √( γ₀*2^(n)*factorial(n)))) )
     catch
         oftype(float(γ₀), inv((γ₀*√( π*2^(m+n)*factorial(big(n))*factorial(big(m))))))
-    end
+    end=#
+    oftype(float(γ₀), inv( ( pi^(1//4) * √( γ₀*2^(n)*factorial(n)))) )
 end
 
 function core_hg(x,y,α,γ₀,m,n,x_coefs,y_coefs,isdiagonal)
