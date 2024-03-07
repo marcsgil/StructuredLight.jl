@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · StructuredLight.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">StructuredLight.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Introduction</a></li><li><a class="tocitem" href="../initial_profiles/">Initial Profiles</a></li><li><a class="tocitem" href="../visualization/">Visualization</a></li><li><a class="tocitem" href="../propagation/">Propagation</a></li><li><a class="tocitem" href="../miscellany/">Miscellany</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Astigmatic-Conversion"><span>Astigmatic Conversion</span></a></li><li><a class="tocitem" href="#Diffraction-Rings-in-Kerr-Media"><span>Diffraction Rings in Kerr Media</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/marcsgil/StructuredLight.jl/blob/master/docs/src/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><h2 id="Astigmatic-Conversion"><a class="docs-heading-anchor" href="#Astigmatic-Conversion">Astigmatic Conversion</a><a id="Astigmatic-Conversion-1"></a><a class="docs-heading-anchor-permalink" href="#Astigmatic-Conversion" title="Permalink"></a></h2><p>In this example, we reproduce the results of <a href="https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4">Pravin Vaity et al., &quot;Measuring topological charge of optical vortices using a tilted convex lens,&quot; Phys. Lett. A, vol. 377, no. 15, pp. 1154-1156, 2013. DOI: 10.1016/j.physleta.2013.02.030</a>, where it is shown that a tilted lens can &quot;transform&quot; a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.</p><pre><code class="language- hljs">#Here, we initialize the package and define the experimental parameters:
+using StructuredLight
+
+#All quantities have unit of (inverse) meter
+
+w0 = 0.16e-3 #Waist
+λ = 632.8e-9 #Wavelength
+k = 2π/λ #Wavenumber
+f = 50e-2 #Focal length of the lens
+
+z₀ = 3.1 #Distance away from the focus where the beam encounters the lens
+
+z_cr = z₀/(z₀/f-1) #Conversion distance
+
+ξ = deg2rad(6) #Tilting angle
+
+# Now, we set up our grid and the initial profile by including the action of a tilted lens:
+rs = LinRange(-70w0,70w0,1024)
+ψ₀ = lg(rs,rs,z₀,l=3,w0=w0,k=k) .* tilted_lens(rs,rs,f,ξ,k=k)
+
+# Finally, we propagate. 
+# Note that we introduce scalings, because, otherwise, the beam would be to small.
+zs = z_cr .* LinRange(.97,1.03,64)
+scalings = 0.015 .* vcat(LinRange(2.4,1,32),LinRange(1,2.4,32))
+ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scalings)
+anim = show_animation(ψ,ratio=1/2,fps=12)</code></pre><p>By changing the initial angular momentum, one obtains different HG modes.</p><h2 id="Diffraction-Rings-in-Kerr-Media"><a class="docs-heading-anchor" href="#Diffraction-Rings-in-Kerr-Media">Diffraction Rings in Kerr Media</a><a id="Diffraction-Rings-in-Kerr-Media-1"></a><a class="docs-heading-anchor-permalink" href="#Diffraction-Rings-in-Kerr-Media" title="Permalink"></a></h2><p>Here, we reproduce the results of <a href="https://opg.optica.org/oe/fulltext.cfm?uri=oe-18-21-22067&amp;id=206115">E. V. Garcia Ramirez, M. L. Arroyo Carrasco, M. M. Mendez Otero, S. Chavez Cerda, and M. D. Iturbe Castillo, &quot;Far field intensity distributions due to spatial self phase modulation of a Gaussian beam by a thin nonlocal nonlinear media,&quot; Opt. Express 18, 22067-22079 (2010)</a>, where it is studied the appearance of rings in the far field profile of a Gaussian beam after it crosses a nonlinear medium.</p><pre><code class="language- hljs">#First we import the package.
+using StructuredLight
+
+#Define a function that calculates the nonlinear phase term.
+function non_linear_phase(ψ,m,n)
+    M = maximum(abs2,ψ)
+    [ cis( π * n * (abs2(ψ[j,k])/M)^(m/2) ) for j ∈ axes(ψ,1), k ∈ axes(ψ,2) ]
+end
+
+#Define a function that calculates the three images.
+function get_images(rs,ms,n,z₀,z,scalling)
+    ψ = Array{ComplexF64}(undef,length(rs),length(rs),length(ms))
+
+    ψ₀ = lg(rs,rs,z₀)
+
+    for (i,m) in enumerate(ms)
+        ψ₁ = ψ₀ .* non_linear_phase(ψ₀,m,n)
+        ψ[:,:,i] = free_propagation(ψ₁,rs,rs,z,scalling)
+    end
+
+    ψ
+end
+
+#The values of `m` that are used throughout the article:
+ms = (1,2,4)
+
+#The Rayleigh range:
+zᵣ = 1/2;
+
+# This would be the figure 1:
+rs = LinRange(-10,10,512)
+visualize(get_images(rs,ms,2,-4zᵣ,15,10),ratio=2)</code></pre><p>The other figures are just a variation of this one, by changing the distance from the waist and <code>n</code>.</p><p>Alternatively, we can solve the complete nonlinear Schrödinger equation to get the initial profile:</p><pre><code class="language-julia hljs">using StructuredLight
+rs = LinRange(-10,10,512)
+ψ₀ = lg(rs,rs,-4zᵣ)
+M = maximum(abs2,ψ₀)
+
+n = 2
+ψ₁ = kerr_propagation(ψ₀,rs,rs,.01*zᵣ,512,g=400*n*π/M)
+
+#The output of this free propagation should then be equal to the previous case with `m=2`:
+ψ = free_propagation(ψ₁,rs,rs,10,7)
+visualize(ψ)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../miscellany/">« Miscellany</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Thursday 7 March 2024 19:16">Thursday 7 March 2024</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
