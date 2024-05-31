@@ -20,6 +20,7 @@ CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 StructuredLightCUDAExt = "CUDA"
 
 [compat]
+CUDA = "5"
 ColorSchemes = "3"
 FourierTools = "0.4"
 Images = "0.26"
