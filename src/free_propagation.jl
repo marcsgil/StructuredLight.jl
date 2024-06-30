@@ -14,30 +14,38 @@ The output at a distance `z[n]` is calculated on a scalled grid defined by `scal
 
 `k` is the wavenumber.
 """
-function free_propagation(ψ₀,xs,ys,zs;k=1)
+function free_propagation(ψ₀, xs, ys, zs; k=1)
     FFTW.set_num_threads(8)
 
-    shifted_ψ₀ = ifftshift(ψ₀)
+    shifted_ψ₀ = similar(ψ₀, complex(eltype(ψ₀)))
+    ifftshift!(shifted_ψ₀, ψ₀)
 
-    qxs = reciprocal_grid(xs,shift=true)
-    qys = reciprocal_grid(ys,shift=true)
-    
-    ψ = _free_propagation!(shifted_ψ₀,qxs,qys,zs,k)
+    qxs = reciprocal_grid(xs, shift=true)
+    qys = reciprocal_grid(ys, shift=true)
 
-    zs isa Number ? dropdims( fftshift_view(ψ,(1,2)),dims=3) : fftshift_view(ψ,(1,2))
+    ψ = _free_propagation!(shifted_ψ₀, qxs, qys, zs, k)
+
+    fftshift_view(ψ, (1, 2))
 end
 
-function _free_propagation!(ψ₀,qxs,qys,zs,k)
+function _free_propagation!(ψ₀, qxs, qys, z::Number, k)
     fft!(ψ₀)
 
-    @tullio phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
-    typeof(phases)
-    @tullio ψ[i,j,l] := ψ₀[i,j] * cis( phases[i,j] * zs[l] )
+    @tullio ψ[i, j] := ψ₀[i, j] * cis(-z * (qxs[i]^2 + qys[j]^2) / 2k)
 
-    ifft!(ψ,(1,2))
+    ifft!(ψ)
 end
 
-function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
+function _free_propagation!(ψ₀, qxs, qys, zs, k)
+    fft!(ψ₀)
+
+    @tullio phases[i, j] := -(qxs[i]^2 + qys[j]^2) / 2k
+    @tullio ψ[i, j, l] := ψ₀[i, j] * cis(phases[i, j] * zs[l])
+
+    ifft!(ψ, (1, 2))
+end
+
+function free_propagation(ψ₀, xs, ys, zs, scaling; k=1)
     @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
     @assert 0 ∉ zs "This method does not support `zs` containing `0`"
 
@@ -48,32 +56,32 @@ function free_propagation(ψ₀,xs,ys,zs,scaling;k=1)
     direct_xgrid = fftshift_view(xs)
     direct_ygrid = fftshift_view(ys)
 
-    qxs = reciprocal_grid(xs,shift=true)
-    qys = reciprocal_grid(ys,shift=true)
-    
-    ψ = _free_propagation!(shifted_ψ₀,direct_xgrid,direct_ygrid,zs,qxs,qys,scaling,k)
+    qxs = reciprocal_grid(xs, shift=true)
+    qys = reciprocal_grid(ys, shift=true)
 
-    zs isa Number ? dropdims( fftshift_view(ψ,(1,2)),dims=3) : fftshift_view(ψ,(1,2))
+    ψ = _free_propagation!(shifted_ψ₀, direct_xgrid, direct_ygrid, zs, qxs, qys, scaling, k)
+
+    zs isa Number ? dropdims(fftshift_view(ψ, (1, 2)), dims=3) : fftshift_view(ψ, (1, 2))
 end
 
-function _free_propagation!(ψ₀,xs,ys,zs,qxs,qys,scaling,k)
-    @tullio direct_phases[i,j] := k * ( xs[j]^2 + ys[i]^2 ) / 2
-    @tullio ψ[i,j,l] := ψ₀[i,j] * cis( direct_phases[i,j] * ( 1 - scaling[l] ) / zs[l] ) / scaling[l]
+function _free_propagation!(ψ₀, xs, ys, zs, qxs, qys, scaling, k)
+    @tullio direct_phases[i, j] := k * (xs[i]^2 + ys[j]) / 2
+    @tullio ψ[i, j, l] := ψ₀[i, j] * cis(direct_phases[i, j] * (1 - scaling[l]) / zs[l]) / scaling[l]
 
-    fft!(ψ,(1,2))
+    fft!(ψ, (1, 2))
 
-    @tullio reciprocal_phases[i,j] := - ( qxs[j]^2 + qys[i]^2 ) / 2k
-    @tullio ψ[i,j,l] *= cis( reciprocal_phases[i,j] * zs[l] / scaling[l] )
+    @tullio reciprocal_phases[i, j] := -(qxs[i]^2 + qys[j]^2) / 2k
+    @tullio ψ[i, j, l] *= cis(reciprocal_phases[i, j] * zs[l] / scaling[l])
 
-    ifft!(ψ,(1,2))
-    @tullio ψ[i,j,l] *= cis( - direct_phases[i,j] * ( 1 - scaling[l] ) * scaling[l] / zs[l])
+    ifft!(ψ, (1, 2))
+    @tullio ψ[i, j, l] *= cis(-direct_phases[i, j] * (1 - scaling[l]) * scaling[l] / zs[l])
 end
 
-function non_spectral_propagation(ψ₀,xs,ys,z;k=1)
+function non_spectral_propagation(ψ₀, xs, ys, z; k=1)
     Δx = xs[2] - xs[1]
     Δy = ys[2] - ys[1]
-    α = √(k/(2im*z))
+    α = √(k / (2im * z))
     kernel = similar(ψ₀)
-    @tullio kernel[i,j] = π / 4 * (erf(α*(j+1)*Δx) - erf(α*j*Δx) ) * (erf(α*(i+1)*Δy) - erf(α*i*Δy) )
+    @tullio kernel[i, j] = π / 4 * (erf(α * (j + 1) * Δx) - erf(α * j * Δx)) * (erf(α * (i + 1) * Δy) - erf(α * i * Δy))
     (ifft(fft((ifftshift(ψ₀))) .* fft((ifftshift(kernel)))))
 end

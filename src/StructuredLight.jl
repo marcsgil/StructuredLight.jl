@@ -7,16 +7,18 @@ using FourierTools, LinearAlgebra
 using Images, VideoIO
 @reexport using ColorSchemes
 using Tullio
-#import SpecialFunctions: beta, erf
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
 
+include("ortho_poly.jl")
+export laguerre, hermite
+
 include("initial_profiles.jl")
-export lg,hg,diagonal_hg,lens,tilted_lens
+export rotated_hg, hg, diagonal_hg, lg, lens, tilted_lens
 
 include("visualization.jl")
-export visualize,show_animation,save_animation
+export visualize, show_animation, save_animation
 
 include("free_propagation.jl")
 export free_propagation
