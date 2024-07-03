@@ -6,18 +6,23 @@ end
 
 float_type(args...) = float(typeof(sum(first, args)))
 
+"""
+    normalization_hg(m,n,γ=1)
+
+Compute the normalization constant for the Hermite-Gaussian modes.
+"""
 function normalization_hg(m, n, γ::T=1) where {T}
     convert(float(T), inv(γ * √(π * 2^(m + n))) * √(prod(inv, 1:m, init=1) * prod(inv, 1:n, init=1)))
 end
 
-function _hg(x, y, s, c; m::Integer=0, n::Integer=0, γ=one(x))
+function _hg(x, y, s, c; m::Integer=0, n::Integer=0, γ=one(eltype(x)))
     X = (x * c + y * s) / γ
     Y = (-x * s + y * c) / γ
 
     hermite(X, m) * hermite(Y, n) * exp((-X^2 - Y^2) / 2)
 end
 
-function _hg(x::Real, y::Real, α::Complex, s, c; m::Integer=0, n::Integer=0, γ=one(x))
+function _hg(x, y, α, s, c; m::Integer=0, n::Integer=0, γ=one(eltype(x)))
     X = (x * c + y * s) / γ
     Y = (-x * s + y * c) / γ
 
@@ -25,38 +30,39 @@ function _hg(x::Real, y::Real, α::Complex, s, c; m::Integer=0, n::Integer=0, γ
 end
 
 """
-    hg(x::Real, y::Real; m::Integer=0, n::Integer=0, w=one(x))
+    rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
+    rotated_hg(x, y, z; 
+               θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
 
-    hg(x, y; m::Integer=0, n::Integer=0, w=one(eltype(x)))
+Compute a Hermite-Gaussian mode rotated by an angle `θ` (rad).
 
-    hg(x::Real, y::Real, z::Real;
-    m::Integer=0, n::Integer=0, w=one(x), k=one(x))
+`x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
 
-    hg(x, y, z::Real;
-    m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+# Other Arguments:
 
-    hg(x, y, z;
-    m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+- `m`: x index when θ=0
 
-Compute the Hermite-Gaussian mode.
+- `n`: y index when θ=0
 
-The optional keyword arguments are:
+- `w0`: beam's waist
 
-`m`: horizontal index
+- `k`: wavenumber
 
-`n`: vertical index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-
-The different signatures evaluate points in a grid, e.g.
-
-`hg(xs,ys,zs) = [hg(x,y,z) for x ∈ xs, y ∈ ys, z ∈ zs]`
-
-but the left hand side is faster.
+# Examples
+```jldoctest
+julia> rs = LinRange(-5, 5, 256);
+julia> ψ₁ = rotated_hg(rs, rs, θ=0.1, m=3, n=2);
+julia> ψ₂ = [rotated_hg(x, y, θ=0.1, m=3, n=2) for x in rs, y in rs];
+julia> ψ₁ ≈ ψ₂
+true
+julia> zs = LinRange(0, 1, 32);
+julia> ψ₃ = rotated_hg(rs, rs, zs, θ=0.1, m=3, n=2);
+julia> ψ₄ = [rotated_hg(x, y, z, θ=0.1, m=3, n=2) for x in rs, y in rs, z in zs];
+julia> ψ₃ ≈ ψ₄
+true
+```
 """
-function rotated_hg(x::Real, y::Real; θ, m::Integer=0, n::Integer=0, w=one(x))
+function rotated_hg(x::Real, y::Real; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
     assert_hermite_indices(m, n)
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
@@ -77,7 +83,7 @@ function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
 end
 
 function rotated_hg(x::Real, y::Real, z::Real;
-    θ, m::Integer=0, n::Integer=0, w=one(x), k=one(x))
+    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
     assert_hermite_indices(m, n)
 
     T = float(typeof(sum((x, y, z, w, k))))
@@ -114,13 +120,14 @@ function rotated_hg(x, y, z;
     k = convert(T, k)
     s, c = sincos(θ)
 
+    α(z) = inv(1 + im * z / (k * γ^2))
+
     function prefactor(z)
-        α = inv(1 + im * z / (k * γ^2))
-        cis((m + n) * angle(α))
+        cis(-(m + n) * atan(z / (k * γ^2)))
     end
     N = normalization_hg(m, n, γ)
 
-    @tullio _[j, k, l] := N * prefactor(z[l]) * _hg(x[j], y[k], α, s, c; m, n, γ)
+    @tullio _[j, k, l] := N * prefactor(z[l]) * _hg(x[j], y[k], α(z[l]), s, c; m, n, γ)
 end
 
 hg(x, y; kwargs...) = rotated_hg(x, y; θ=zero(first(x)), kwargs...)
@@ -129,7 +136,7 @@ hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=zero(first(x)), kwargs...)
 diagonal_hg(x, y; kwargs...) = rotated_hg(x, y; θ=oftype(float(first(x)), π / 4), kwargs...)
 diagonal_hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=oftype(float(first(x)), π / 4), kwargs...)
 
-function _lg(x, y; p::Integer, l::Integer, γ=one(x))
+function _lg(x, y; p::Integer, l::Integer, γ=one(eltype(x)))
     X = x / γ
     Y = y / γ
     r2 = X^2 + Y^2
@@ -137,7 +144,7 @@ function _lg(x, y; p::Integer, l::Integer, γ=one(x))
     exp(-r2 / 2) * (X + im * sign(l) * Y)^L * laguerre(r2, p, L)
 end
 
-function _lg(x, y, α; p::Integer, l::Integer, γ=one(x))
+function _lg(x, y, α; p::Integer, l::Integer, γ=one(eltype(x)))
     X = x / γ
     Y = y / γ
     r2 = X^2 + Y^2
@@ -153,7 +160,7 @@ function normalization_lg(p, l, γ=1)
     convert(float(eltype(γ)), √inv(prod(p+1:p+abs(l)) * π) / γ)
 end
 
-function lg(x::Real, y::Real; p::Integer=0, l::Integer=0, w=one(x))
+function lg(x::Real, y::Real; p::Integer=0, l::Integer=0, w=one(eltype(x)))
     @assert p ≥ 0
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
@@ -172,7 +179,7 @@ function lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)))
 end
 
 function lg(x::Real, y::Real, z::Real;
-    p::Integer=0, l::Integer=0, w=one(x), k=one(x))
+    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
     @assert p ≥ 0
 
     T = float(typeof(sum((x, y, z, w, k))))

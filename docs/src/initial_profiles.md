@@ -4,6 +4,12 @@ This package implements the Laguerre-Gauss modes (`lg`), the Hermite-Gauss modes
 
 In all cases, one must specify the points or the grids over which the mode is calculated. The other beam parameters are specified through keyword arguments.
 
+## Rotated Hermite-Gauss
+
+```@docs
+rotated_hg
+```
+
 ## Laguerre-Gauss
 
 ```@docs
