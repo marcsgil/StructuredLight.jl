@@ -76,12 +76,3 @@ function _free_propagation!(ψ₀, xs, ys, zs, qxs, qys, scaling, k)
     ifft!(ψ, (1, 2))
     @tullio ψ[i, j, l] *= cis(-direct_phases[i, j] * (1 - scaling[l]) * scaling[l] / zs[l])
 end
-
-function non_spectral_propagation(ψ₀, xs, ys, z; k=1)
-    Δx = xs[2] - xs[1]
-    Δy = ys[2] - ys[1]
-    α = √(k / (2im * z))
-    kernel = similar(ψ₀)
-    @tullio kernel[i, j] = π / 4 * (erf(α * (j + 1) * Δx) - erf(α * j * Δx)) * (erf(α * (i + 1) * Δy) - erf(α * i * Δy))
-    (ifft(fft((ifftshift(ψ₀))) .* fft((ifftshift(kernel)))))
-end

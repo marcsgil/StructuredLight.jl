@@ -28,26 +28,14 @@ end
 
 end
 
-"""@testset "Laguerre Gauss" begin
-    xs = LinRange(-10,10,1024)
-    ys = LinRange(-10,10,512)
-
-    for p in 0:3, l in 0:3, z in (.1,.5,1)
-        ψ1 = lg(xs,ys,z,p=p,l=l)
-        ψ2 = free_propagation(lg(xs,ys,p = p,l = l), xs,ys,z)
-        @test isapprox(overlap(ψ1,ψ2,xs,ys), 1, atol=0.03)
-    end
-    
-end
-
-@testset "Scalled Laguerre Gauss" begin
+@testset "Laguerre Gauss" begin
     xs = LinRange(-10, 10, 1024)
     ys = LinRange(-10, 10, 512)
 
-    for p in 0:3, l in 0:3, z in (0.2, 1, 2)
-        ψ1 = lg(2xs, 2ys, z, p=p, l=l)
-        ψ2 = free_propagation(lg(xs, ys, p=p, l=l), xs, ys, z, 2)
-        @test isapprox(overlap(ψ1, ψ2, xs, ys), 1 / 4, atol=0.03)
+    for p in 0:3, l in 0:3, z in (0.1, 0.5, 1)
+        ψ1 = lg(xs, ys, z, p=p, l=l)
+        ψ2 = free_propagation(lg(xs, ys, p=p, l=l), xs, ys, z)
+        @test isapprox(overlap(ψ1, ψ2, xs, ys), 1, atol=0.03)
     end
 
 end
@@ -73,23 +61,22 @@ end
         ψ2 = free_propagation(diagonal_hg(xs, ys, m=m, n=n), xs, ys, z, 2)
         @test isapprox(overlap(ψ1, ψ2, xs, ys), 1 / 4, atol=0.03)
     end
+end
+
+@testset "Scalled Laguerre Gauss" begin
+    xs = LinRange(-10, 10, 1024)
+    ys = LinRange(-10, 10, 512)
+
+    for p in 0:3, l in 0:3, z in (0.2, 1, 2)
+        ψ1 = lg(2xs, 2ys, z, p=p, l=l)
+        ψ2 = free_propagation(lg(xs, ys, p=p, l=l), xs, ys, z, 2)
+        @test isapprox(overlap(ψ1, ψ2, xs, ys), 1 / 4, atol=0.03)
+    end
 
 end
 
 if CUDA.functional()
     CUDA.allowscalar(false)
-
-    @testset "Laguerre Gauss (CUDA)" begin
-        xs = LinRange(-10, 10, 1024)
-        ys = LinRange(-10, 10, 512)
-
-        for p in 0:3, l in 0:3, z in (0.1, 0.5, 1)
-            ψ1 = lg(xs, ys, z, p=p, l=l) |> CuArray
-            ψ2 = free_propagation(lg(xs, ys, p=p, l=l) |> CuArray, xs, ys, z)
-            @test isapprox(overlap(ψ1, ψ2, xs, ys), 1, atol=0.03)
-        end
-
-    end
 
     @testset "Hermite Gauss (CUDA)" begin
         xs = LinRange(-10, 10, 1024)
@@ -148,7 +135,16 @@ if CUDA.functional()
             ψ2 = free_propagation(diagonal_hg(xs, ys, m=m, n=n) |> CuArray, xs, ys, z, 2)
             @test isapprox(overlap(ψ1, ψ2, xs, ys), 1 / 4, atol=0.03)
         end
+    end
 
+    @testset "Laguerre Gauss (CUDA)" begin
+        xs = LinRange(-10, 10, 1024)
+        ys = LinRange(-10, 10, 512)
+
+        for p in 0:3, l in 0:3, z in (0.1, 0.5, 1)
+            ψ1 = lg(xs, ys, z, p=p, l=l) |> CuArray
+            ψ2 = free_propagation(lg(xs, ys, p=p, l=l) |> CuArray, xs, ys, z)
+            @test isapprox(overlap(ψ1, ψ2, xs, ys), 1, atol=0.03)
+        end
     end
 end
-"""
