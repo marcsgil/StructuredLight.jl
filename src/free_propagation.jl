@@ -61,11 +61,23 @@ function free_propagation(ψ₀, xs, ys, zs, scaling; k=1)
 
     ψ = _free_propagation!(shifted_ψ₀, direct_xgrid, direct_ygrid, zs, qxs, qys, scaling, k)
 
-    zs isa Number ? dropdims(fftshift_view(ψ, (1, 2)), dims=3) : fftshift_view(ψ, (1, 2))
+    fftshift_view(ψ, (1, 2))
+end
+
+function _free_propagation!(ψ₀, xs, ys, z::Number, qxs, qys, scaling, k)
+    @tullio ψ[i, j] := ψ₀[i, j] * cis(k * (xs[i]^2 + ys[j]^2) * (1 - scaling) / 2z) / scaling
+
+    fft!(ψ)
+
+    @tullio ψ[i, j] *= cis(-(qxs[i]^2 + qys[j]^2) / 2k * z / scaling)
+
+    ifft!(ψ)
+
+    @tullio ψ[i, j] *= cis(-k * (xs[i]^2 + ys[j]^2) * (1 - scaling) * scaling / 2z)
 end
 
 function _free_propagation!(ψ₀, xs, ys, zs, qxs, qys, scaling, k)
-    @tullio direct_phases[i, j] := k * (xs[i]^2 + ys[j]) / 2
+    @tullio direct_phases[i, j] := k * (xs[i]^2 + ys[j]^2) / 2
     @tullio ψ[i, j, l] := ψ₀[i, j] * cis(direct_phases[i, j] * (1 - scaling[l]) / zs[l]) / scaling[l]
 
     fft!(ψ, (1, 2))
