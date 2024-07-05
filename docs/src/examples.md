@@ -10,16 +10,16 @@ using StructuredLight
 k = 1
 f = √2
 d = f / √2
-w0 = √((2 + √2) * f / k)
-rs = LinRange(-4w0, 4w0, 512)
+w = √((2 + √2) * f / k)
+rs = LinRange(-4w, 4w, 512)
 zs = LinRange(0, 2d, 64)
 ##
-ψ₀ = lg(rs, rs, -d; w0, k, l=1, p=0) .* lens(rs, rs, Inf, f; k)
+ψ₀ = lg(rs, rs, -d; w, k, l=1, p=0) .* lens(rs, rs, Inf, f; k)
 ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
 ψs = free_propagation(ψ₀, rs, rs, zs; k)
 
-visualize(ψ₀)
-visualize(ψ₁)
+visualize(abs2.(ψ₀))
+visualize(abs2.(ψ₁))
 ```
 
 ## Astigmatic Conversion
@@ -32,7 +32,7 @@ using StructuredLight
 
 #All quantities have unit of (inverse) meter
 
-w0 = 0.16e-3 #Waist
+w = 0.16e-3 #Waist
 λ = 632.8e-9 #Wavelength
 k = 2π/λ #Wavenumber
 f = 50e-2 #Focal length of the lens
@@ -44,15 +44,15 @@ z_cr = z₀/(z₀/f-1) #Conversion distance
 ξ = deg2rad(6) #Tilting angle
 
 # Now, we set up our grid and the initial profile by including the action of a tilted lens:
-rs = LinRange(-70w0,70w0,1024)
-ψ₀ = lg(rs,rs,z₀,l=3,w0=w0,k=k) .* tilted_lens(rs,rs,f,ξ,k=k)
+rs = LinRange(-70w,70w,1024)
+ψ₀ = lg(rs,rs,z₀,l=3,w=w,k=k) .* tilted_lens(rs,rs,f,ξ,k=k)
 
 # Finally, we propagate. 
 # Note that we introduce scalings, because, otherwise, the beam would be to small.
 zs = z_cr .* LinRange(.97,1.03,64)
 scalings = 0.015 .* vcat(LinRange(2.4,1,32),LinRange(1,2.4,32))
 ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scalings)
-anim = show_animation(ψ,ratio=1/2,fps=12)
+anim = show_animation(abs2.(ψ),ratio=1/2,fps=12)
 ```
 
 By changing the initial angular momentum, one obtains different HG modes.
@@ -93,7 +93,7 @@ zᵣ = 1/2;
 
 # This would be the figure 1:
 rs = LinRange(-10,10,512)
-visualize(get_images(rs,ms,2,-4zᵣ,15,10),ratio=2)
+visualize(abs2.(get_images(rs,ms,2,-4zᵣ,15,10)),ratio=2)
 ```
 
 The other figures are just a variation of this one, by changing the distance from the waist and `n`.
@@ -111,5 +111,5 @@ n = 2
 
 #The output of this free propagation should then be equal to the previous case with `m=2`:
 ψ = free_propagation(ψ₁,rs,rs,10,7)
-visualize(ψ)
+visualize(abs2.(ψ))
 ```

@@ -22,7 +22,7 @@ rs = LinRange(-6,6,256)
 ψ = free_propagation(ψ₀,rs,rs,1) #Then, we propagate it by a distance z=1.
 
 #Here are the initial profiles the propagated beam, side by side.
-visualize([ψ₀,ψ] |> stack,ratio=2)
+visualize([ψ₀,ψ] |> stack .|> abs2,ratio=2)
 ```
 
 ```@example
@@ -38,7 +38,7 @@ zs = LinRange(0,1,64)
 #Now the propagation is performed for each z ∈ zs. The output is a 3D array.
 ψs = free_propagation(ψ₀,rs,rs,zs)
 
-show_animation(ψs,ratio=2)
+show_animation(abs2.(ψs),ratio=2)
 ```
 
 ```@example
@@ -56,7 +56,7 @@ scalings = @. √(1+4*zs^2) #Here, we introduce the scalings given by w(z)/w0
 
 #Note that the scalings compensate the diffraction of the beam.
 #Therefore, the animation seems still.
-show_animation(ψs,ratio=2)
+show_animation(abs2.(ψs),ratio=2)
 ```
 
 ### References
@@ -81,7 +81,7 @@ zs = LinRange(0,.1,32) #The z grid
 #We perform the propagation with a strong nonlinearity
 ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=100)
 
-show_animation(ψ,ratio=2) #The beam colapses due to the self focusing effect
+show_animation(abs2.(ψ),ratio=2) #The beam colapses due to the self focusing effect
 ```
 
 ### References

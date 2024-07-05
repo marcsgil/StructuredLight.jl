@@ -1,6 +1,11 @@
 module StructuredLight
 
 using FourierTools, LinearAlgebra, Tullio
+using Images, VideoIO, Reexport
+@reexport using ColorSchemes
+
+include("visualization.jl")
+export visualize, show_animation, save_animation
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid

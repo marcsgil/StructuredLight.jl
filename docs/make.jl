@@ -5,6 +5,7 @@ makedocs(
     pages=[
         "index.md",
         "initial_profiles.md",
+        "visualization.md",
         "propagation.md",
         "miscellany.md",
         "examples.md"]

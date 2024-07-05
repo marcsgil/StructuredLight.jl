@@ -13,11 +13,11 @@ rs = LinRange(-5,5,256) #Define a linear grid of points
 
 ψ₀ = lg(rs,rs) #Calculates the fundamental Laguerre-Gaussian mode
 
-visualize(ψ₀) #visualizes the mode
+visualize(abs2.(ψ₀)) #visualizes the mode
 
 ψ = free_propagation(ψ₀,rs,rs,1) #Propagates the mode through a distance of z=1
 
-visualize(ψ) #visualizes the evolved mode
+visualize(abs2.(ψ₀)) #visualizes the evolved mode
 ```
 
 This illustrates the basic idea of the package: first, you construct a matrix representing the mode you want to propagate, and then one calls a propagation function, in this case `free_propagation`. Then, we visualize the propagated beam.
