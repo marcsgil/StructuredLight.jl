@@ -238,8 +238,8 @@ function normalization_lg(p, l, γ=1)
 end
 
 """
-    lg(x, y; m::Integer=0, n::Integer=0, w=one(eltype(x)))
-    lg(x, y, z; m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)))
+    lg(x, y, z; p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
 
 Compute a diagonal Hermite-Gaussian mode.
 
