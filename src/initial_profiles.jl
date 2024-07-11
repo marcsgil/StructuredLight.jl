@@ -44,21 +44,28 @@ Compute a Hermite-Gaussian mode rotated by an angle `θ` (rad).
 
 - `n`: y index when θ=0
 
-- `w0`: beam's waist
+- `w`: beam's waist
 
 - `k`: wavenumber
 
 # Examples
+
 ```jldoctest
-julia> rs = LinRange(-5, 5, 256);
-julia> ψ₁ = rotated_hg(rs, rs, θ=0.1, m=3, n=2);
-julia> ψ₂ = [rotated_hg(x, y, θ=0.1, m=3, n=2) for x in rs, y in rs];
-julia> ψ₁ ≈ ψ₂
-true
-julia> zs = LinRange(0, 1, 32);
-julia> ψ₃ = rotated_hg(rs, rs, zs, θ=0.1, m=3, n=2);
-julia> ψ₄ = [rotated_hg(x, y, z, θ=0.1, m=3, n=2) for x in rs, y in rs, z in zs];
-julia> ψ₃ ≈ ψ₄
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
+
+# just x and y
+ψ₁ = rotated_hg(rs, rs, θ = 0.1, m=3, n=2)
+ψ₂ = [rotated_hg(x, y, θ = 0.1, m=3, n=2) for y in rs, x in rs]
+
+# x, y and z
+ψ₃ = rotated_hg(rs, rs, zs, θ = 0.1, m=3, n=2)
+ψ₄ = [rotated_hg(x, y, z, θ = 0.1, m=3, n=2) for y in rs, x in rs, z ∈ zs]
+
+ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
+
+# output
+
 true
 ```
 
@@ -146,21 +153,28 @@ Compute a Hermite-Gaussian mode.
 
 - `n`: y index
 
-- `w0`: beam's waist
+- `w`: beam's waist
 
 - `k`: wavenumber
 
 # Examples
+
 ```jldoctest
-julia> rs = LinRange(-5, 5, 256);
-julia> ψ₁ = hg(rs, rs, m=3, n=2);
-julia> ψ₂ = [hg(x, y, m=3, n=2) for x in rs, y in rs];
-julia> ψ₁ ≈ ψ₂
-true
-julia> zs = LinRange(0, 1, 32);
-julia> ψ₃ = hg(rs, rs, zs, θ=0.1, m=3, n=2);
-julia> ψ₄ = [hg(x, y, z, m=3, n=2) for x in rs, y in rs, z in zs];
-julia> ψ₃ ≈ ψ₄
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
+
+# just x and y
+ψ₁ = hg(rs, rs, m=3, n=2)
+ψ₂ = [hg(x, y, m=3, n=2) for y in rs, x in rs]
+
+# x, y and z
+ψ₃ = hg(rs, rs, zs, m=3, n=2)
+ψ₄ = [hg(x, y, z, m=3, n=2) for y in rs, x in rs, z ∈ zs]
+
+ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
+
+# output
+
 true
 ```
 
@@ -183,28 +197,28 @@ Compute a diagonal Hermite-Gaussian mode.
 
 - `n`: antidiagonal index
 
-- `w0`: beam's waist
+- `w`: beam's waist
 
 - `k`: wavenumber
 
 # Examples
+
 ```jldoctest
-julia> rs = LinRange(-5, 5, 256);
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
 
-julia> ψ₁ = diagonal_hg(rs, rs, m=3, n=2);
+# just x and y
+ψ₁ = diagonal_hg(rs, rs, m=3, n=2)
+ψ₂ = [diagonal_hg(x, y, m=3, n=2) for y in rs, x in rs]
 
-julia> ψ₂ = [diagonal_hg(x, y, m=3, n=2) for x in rs, y in rs];
+# x, y and z
+ψ₃ = diagonal_hg(rs, rs, zs, m=3, n=2)
+ψ₄ = [diagonal_hg(x, y, z, m=3, n=2) for y in rs, x in rs, z ∈ zs]
 
-julia> ψ₁ ≈ ψ₂
-true
+ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
 
-julia> zs = LinRange(0, 1, 32);
+# output
 
-julia> ψ₃ = diagonal_hg(rs, rs, zs, θ=0.1, m=3, n=2);
-
-julia> ψ₄ = [diagonal_hg(x, y, z, m=3, n=2) for x in rs, y in rs, z in zs];
-
-julia> ψ₃ ≈ ψ₄
 true
 ```
 
@@ -225,7 +239,8 @@ function _lg(x, y, α; p::Integer, l::Integer, γ=one(eltype(x)))
     X = x / γ
     Y = y / γ
     r2 = X^2 + Y^2
-    α * exp(-α * r2 / 2) * (abs(α) * (X + im * sign(l) * Y))^abs(l) * laguerre(abs2(α) * r2, p, abs(l))
+    L = abs(l)
+    α * exp(-α * r2 / 2) * (abs(α) * (X + im * sign(l) * Y))^L * laguerre(abs2(α) * r2, p, L)
 end
 
 """
@@ -251,21 +266,28 @@ Compute a diagonal Hermite-Gaussian mode.
 
 - `l`: topological charge
 
-- `w0`: beam's waist
+- `w`: beam's waist
 
 - `k`: wavenumber
 
 # Examples
+
 ```jldoctest
-julia> rs = LinRange(-5, 5, 256);
-julia> ψ₁ = lg(rs, rs, m=3, n=2);
-julia> ψ₂ = [lg(x, y, m=3, n=2) for x in rs, y in rs];
-julia> ψ₁ ≈ ψ₂
-true
-julia> zs = LinRange(0, 1, 32);
-julia> ψ₃ = lg(rs, rs, zs, θ=0.1, m=3, n=2);
-julia> ψ₄ = [lg(x, y, z, m=3, n=2) for x in rs, y in rs, z in zs];
-julia> ψ₃ ≈ ψ₄
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
+
+# just x and y
+ψ₁ = lg(rs, rs, p=1, l=2)
+ψ₂ = [lg(x, y, p=1, l=2) for y in rs, x in rs]
+
+# x, y and z
+ψ₃ = lg(rs, rs, zs, p=1, l=2)
+ψ₄ = [lg(x, y, z, p=1, l=2) for y in rs, x in rs, z ∈ zs]
+
+ψ₃ ≈ ψ₄
+
+# output
+
 true
 ```
 
@@ -293,13 +315,15 @@ function lg(x::Real, y::Real, z::Real;
     p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
     @assert p ≥ 0
 
-    T = float(typeof(sum((x, y, z, w, k))))
+    T = float_type(x, y, z, w, k)
     γ = convert(T, w / √2)
     k = convert(T, k)
 
     α = inv(1 + im * z / (k * γ^2))
-    prefactor = normalization_lg(p, l, γ) * cis((2p + abs(l)) * angle(α))
-    prefactor * _lg(x, y, α; p, l, γ)
+    prefactor = cis((2p + abs(l)) * angle(α))
+    N = normalization_lg(p, l, γ)
+
+    N * prefactor * _lg(x, y, α; p, l, γ)
 end
 
 function lg(x, y, z::Real;
@@ -331,7 +355,7 @@ function lg(x, y, z;
     end
     N = normalization_lg(p, l, γ)
 
-    @tullio _[j, k, l] := N * prefactor(z[l]) * _lg(x[k], y[j], α(z[l]); p, l, γ)
+    @tullio _[j, k, m] := N * prefactor(z[m]) * _lg(x[k], y[j], α(z[m]); p, l, γ)
 end
 
 """

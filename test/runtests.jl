@@ -1,5 +1,8 @@
 using StructuredLight, LinearAlgebra, CUDA
-using Test
+using Test, Documenter
+
+DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight); recursive=true)
+doctest(StructuredLight)
 
 @testset "Hermite Gauss" begin
     xs = LinRange(-10, 10, 1024)
