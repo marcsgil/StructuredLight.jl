@@ -3,6 +3,9 @@ module StructuredLight
 using FourierTools, LinearAlgebra, Tullio
 using Images, VideoIO, Reexport
 @reexport using ColorSchemes
+using KernelAbstractions
+
+FFTW.set_num_threads(8)
 
 include("visualization.jl")
 export visualize, show_animation, save_animation

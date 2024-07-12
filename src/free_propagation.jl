@@ -1,90 +1,138 @@
+to_device(::Any, y) = y
+
+function create_shifted_ψ(ψ, ::Number)
+    shifted_ψ = similar(ψ, complex(eltype(ψ)))
+    ifftshift!(shifted_ψ, ψ)
+end
+
+function create_shifted_ψ(ψ, z)
+    shifted_ψ = similar(ψ, complex(eltype(ψ)), (size(ψ)..., length(z)))
+    for dest ∈ eachslice(shifted_ψ, dims=3)
+        ifftshift!(dest, ψ)
+    end
+    shifted_ψ
+end
+
+get_ndrange(ψ, ::Number) = size(ψ)
+get_ndrange(ψ, z) = (size(ψ)..., length(z))
+
+@kernel function fresnel_kernel!(ψ, x, y, z::Number, k)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= cis(-z * (x[j]^2 + y[i]^2) / 2k)
+end
+
+@kernel function fresnel_kernel!(ψ, x, y, z::Number, k, scaling)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= cis(-z / scaling * (x[j]^2 + y[i]^2) / 2k)
+end
+
+@kernel function pre_kernel!(ψ, x, y, z::Number, k, scaling)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= cis(k * (x[j]^2 + y[i]^2) * (1 - scaling) / 2z) / scaling
+end
+
+@kernel function post_kernel!(ψ, x, y, z::Number, k, scaling)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= cis(k * (x[j]^2 + y[i]^2) * (scaling - 1) * scaling / 2z)
+end
+
+@kernel function fresnel_kernel!(ψ, x, y, z, k)
+    i, j, l = @index(Global, NTuple)
+    ψ[i, j, l] *= cis(-z[l] * (x[j]^2 + y[i]^2) / 2k)
+end
+
+@kernel function fresnel_kernel!(ψ, x, y, z, k, scaling)
+    i, j, l = @index(Global, NTuple)
+    ψ[i, j, l] *= cis(-z[l] / scaling[l] * (x[j]^2 + y[i]^2) / 2k)
+end
+
+@kernel function pre_kernel!(ψ, x, y, z, k, scaling)
+    i, j, l = @index(Global, NTuple)
+    ψ[i, j, l] *= cis(k * (x[j]^2 + y[i]^2) * (1 - scaling[l]) / 2z[l]) / scaling[l]
+end
+
+@kernel function post_kernel!(ψ, x, y, z, k, scaling)
+    i, j, l = @index(Global, NTuple)
+    ψ[i, j, l] *= cis(k * (x[j]^2 + y[i]^2) * (scaling[l] - 1) * scaling[l] / 2z[l])
+end
+
+
 """
-    free_propagation(ψ₀, xs, ys, z::Number [, scaling]; k=1)
-    free_propagation(ψ₀,xs,ys,z::AbstractArray [, scaling]; k=1)
+    free_propagation(ψ, x, y, z [, scaling]; k=1)
+Propagate an inital profile `ψ`.
 
-Propagate an inital profile `ψ₀`.
+The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` at distance `z` under the initial condition `ψ`.
 
-The propagation is the solution of `∇² ψ + 2ik ∂_z ψ = 0` at distance `z` under the initial condition `ψ₀`.
-
-`xs` and `ys` are the grids over which `ψ₀` is calculated.
+`x` and `y` are the grids over which `ψ` is calculated.
 
 If `z` is an `AbstractArray`, the output is a 3D array representing the solution at every element of `z`.
 
-The output at a distance `z[n]` is calculated on a scalled grid defined by `scaling[n] * xs` and `scaling[n] * ys`.
+The output at a distance `z[n]` is calculated on a scalled grid defined by `scaling[n] * x` and `scaling[n] * y`.
 
 `k` is the wavenumber.
+
+# Example
+
+```jldoctest
+x = LinRange(-10, 10, 256)
+y = LinRange(-10, 10, 512)
+z = LinRange(0.1, 1, 10)
+
+ψ = hg(x, y; m=3, n=2)
+ψ′ = hg(2x, 2y; m=3, n=2)
+
+(
+    free_propagation(ψ, x, y, z) ≈ stack(free_propagation(ψ, x, y, z) for z ∈ z)
+    &&
+    free_propagation(ψ, x, y, z, fill(2, length(z))) ≈ stack(free_propagation(ψ, x, y, z, 2) for z ∈ z)
+    &&
+    free_propagation(ψ, x, y, 0.5, 2) ≈ free_propagation(ψ′, 2x, 2y, 0.5)
+)
+
+# output
+true
+```
 """
-function free_propagation(ψ₀, xs, ys, zs; k=1)
-    FFTW.set_num_threads(8)
+function free_propagation(ψ, x, y, z; k=1)
+    qx = to_device(ψ, reciprocal_grid(x, shift=true))
+    qy = to_device(ψ, reciprocal_grid(y, shift=true))
 
-    shifted_ψ₀ = similar(ψ₀, complex(eltype(ψ₀)))
-    ifftshift!(shifted_ψ₀, ψ₀)
+    shifted_ψ = create_shifted_ψ(ψ, z)
 
-    qxs = reciprocal_grid(xs, shift=true)
-    qys = reciprocal_grid(ys, shift=true)
+    backend = get_backend(ψ)
+    _fresnel_kernel! = fresnel_kernel!(backend, 256)
+    ndrange = get_ndrange(ψ, z)
 
-    ψ = _free_propagation!(shifted_ψ₀, qxs, qys, zs, k)
+    fft!(shifted_ψ, (1, 2))
+    _fresnel_kernel!(shifted_ψ, qx, qy, z, k; ndrange)
+    ifft!(shifted_ψ, (1, 2))
 
-    fftshift_view(ψ, (1, 2))
+    fftshift(shifted_ψ, (1, 2))
 end
 
-function _free_propagation!(ψ₀, qxs, qys, z::Number, k)
-    fft!(ψ₀)
+function free_propagation(ψ, x, y, z, scaling; k=1)
+    @assert length(z) == length(scaling) "`z` and `scaling` should have the same length"
+    @assert 0 ∉ z "This method does not support `z` containing `0`"
 
-    @tullio ψ[i, j] := ψ₀[i, j] * cis(-z * (qxs[j]^2 + qys[i]^2) / 2k)
+    _x = to_device(ψ, ifftshift(x))
+    _y = to_device(ψ, ifftshift(y))
+    _z = to_device(ψ, z)
+    qx = to_device(ψ, reciprocal_grid(x, shift=true))
+    qy = to_device(ψ, reciprocal_grid(y, shift=true))
 
-    ifft!(ψ)
-end
+    shifted_ψ = create_shifted_ψ(ψ, z)
 
-function _free_propagation!(ψ₀, qxs, qys, zs, k)
-    fft!(ψ₀)
+    backend = get_backend(ψ)
+    _fresnel_kernel! = fresnel_kernel!(backend, 256)
+    _pre_kernel! = pre_kernel!(backend, 256)
+    _post_kernel! = post_kernel!(backend, 256)
+    ndrange = get_ndrange(ψ, z)
 
-    @tullio phases[i, j] := -(qxs[j]^2 + qys[i]^2) / 2k
-    @tullio ψ[i, j, l] := ψ₀[i, j] * cis(phases[i, j] * zs[l])
+    _pre_kernel!(shifted_ψ, _x, _y, _z, k, scaling; ndrange)
+    fft!(shifted_ψ, (1, 2))
+    _fresnel_kernel!(shifted_ψ, qx, qy, z ./ scaling, k; ndrange)
+    ifft!(shifted_ψ, (1, 2))
+    _post_kernel!(shifted_ψ, _x, _y, _z, k, scaling; ndrange)
 
-    ifft!(ψ, (1, 2))
-end
-
-function free_propagation(ψ₀, xs, ys, zs, scaling; k=1)
-    @assert length(zs) == length(scaling) "`zs` and `scaling` should have the same length"
-    @assert 0 ∉ zs "This method does not support `zs` containing `0`"
-
-    FFTW.set_num_threads(8)
-
-    shifted_ψ₀ = ifftshift_view(ψ₀)
-
-    direct_xgrid = fftshift_view(xs)
-    direct_ygrid = fftshift_view(ys)
-
-    qxs = reciprocal_grid(xs, shift=true)
-    qys = reciprocal_grid(ys, shift=true)
-
-    ψ = _free_propagation!(shifted_ψ₀, direct_xgrid, direct_ygrid, zs, qxs, qys, scaling, k)
-
-    fftshift_view(ψ, (1, 2))
-end
-
-function _free_propagation!(ψ₀, xs, ys, z::Number, qxs, qys, scaling, k)
-    @tullio ψ[i, j] := ψ₀[i, j] * cis(k * (xs[j]^2 + ys[i]^2) * (1 - scaling) / 2z) / scaling
-
-    fft!(ψ)
-
-    @tullio ψ[i, j] *= cis(-(qxs[j]^2 + qys[i]^2) / 2k * z / scaling)
-
-    ifft!(ψ)
-
-    @tullio ψ[i, j] *= cis(-k * (xs[j]^2 + ys[i]^2) * (1 - scaling) * scaling / 2z)
-end
-
-function _free_propagation!(ψ₀, xs, ys, zs, qxs, qys, scaling, k)
-    @tullio direct_phases[i, j] := k * (xs[j]^2 + ys[i]^2) / 2
-    @tullio ψ[i, j, l] := ψ₀[i, j] * cis(direct_phases[i, j] * (1 - scaling[l]) / zs[l]) / scaling[l]
-
-    fft!(ψ, (1, 2))
-
-    @tullio reciprocal_phases[i, j] := -(qxs[j]^2 + qys[i]^2) / 2k
-    @tullio ψ[i, j, l] *= cis(reciprocal_phases[i, j] * zs[l] / scaling[l])
-
-    ifft!(ψ, (1, 2))
-    @tullio ψ[i, j, l] *= cis(-direct_phases[i, j] * (1 - scaling[l]) * scaling[l] / zs[l])
+    fftshift(shifted_ψ, (1, 2))
 end

@@ -15,8 +15,6 @@ interval(grid) = grid[2] - grid[1]
 
 reciprocal_interval(grid) = convert(eltype(grid),2π) / length(grid) / interval(grid)
 
-#direct_grid() = "Test"
-
 function direct_grid(max,N;shift=false)
     (max / (N ÷ 2)) * symetric_integer_range(N;shift)
 end
