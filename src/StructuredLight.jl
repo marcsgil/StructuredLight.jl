@@ -1,14 +1,11 @@
 module StructuredLight
 
-using FourierTools, LinearAlgebra, Tullio
-using Images, VideoIO, Reexport
-@reexport using ColorSchemes
-using KernelAbstractions
+using FFTW, LinearAlgebra, Tullio, KernelAbstractions
 
 FFTW.set_num_threads(8)
 
-include("visualization.jl")
-export visualize, show_animation, save_animation
+function visualize end
+export visualize
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
