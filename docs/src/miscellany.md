@@ -7,7 +7,7 @@ overlap
 ```
 
 ```julia
-using StructuredLight
+using StructuredLight, CairoMakie
 
 rs = LinRange(-5,5,256) 
 ψ₁ = hg(rs,rs)

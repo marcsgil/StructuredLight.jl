@@ -5,7 +5,8 @@ using FFTW, LinearAlgebra, Tullio, KernelAbstractions
 FFTW.set_num_threads(8)
 
 function visualize end
-export visualize
+function save_animation end
+export visualize, save_animation
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid

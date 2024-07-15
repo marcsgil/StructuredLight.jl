@@ -1,9 +1,8 @@
 using Documenter, StructuredLight
 
-DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight); recursive=true)
+DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight, CairoMakie); recursive=true)
 
 makedocs(
-    modules=[StructuredLight],
     sitename="StructuredLight.jl",
     pages=[
         "index.md",
@@ -11,7 +10,8 @@ makedocs(
         "visualization.md",
         "propagation.md",
         "miscellany.md",
-        "examples.md"]
+        "examples.md",
+    ]
 )
 
 deploydocs(

@@ -6,7 +6,7 @@
 In this example, we reproduce the results of [Beijersbergen, Marco W., et al. "Astigmatic laser mode converters and transfer of orbital angular momentum." Optics Communications 96.1-3 (1993): 123-132.](https://www.sciencedirect.com/science/article/pii/003040189390535D), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
 
 ```@example
-using StructuredLight
+using StructuredLight, CairoMakie
 k = 1
 f = √2
 d = f / √2
@@ -18,8 +18,7 @@ zs = LinRange(0, 2d, 64)
 ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
 ψs = free_propagation(ψ₀, rs, rs, zs; k)
 
-visualize(abs2.(ψ₀))
-visualize(abs2.(ψ₁))
+visualize(abs2.([ψ₀, ψ₁] |> stack))
 ```
 
 ## Astigmatic Conversion
@@ -28,7 +27,7 @@ In this example, we reproduce the results of [Pravin Vaity et al., "Measuring to
 
 ```@example
 #Here, we initialize the package and define the experimental parameters:
-using StructuredLight
+using StructuredLight, CairoMakie
 
 #All quantities have unit of (inverse) meter
 
@@ -52,8 +51,11 @@ rs = LinRange(-70w,70w,1024)
 zs = z_cr .* LinRange(.97,1.03,64)
 scalings = 0.015 .* vcat(LinRange(2.4,1,32),LinRange(1,2.4,32))
 ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scalings)
-anim = show_animation(abs2.(ψ),ratio=1/2,fps=12)
+anim = save_animation(abs2.(ψ),"tilted_lens.mp4",framerate=12)
+nothing # hide
 ```
+
+![](tilted_lens.mp4)
 
 By changing the initial angular momentum, one obtains different HG modes.
 
@@ -63,7 +65,7 @@ Here, we reproduce the results of [E. V. Garcia Ramirez, M. L. Arroyo Carrasco, 
 
 ```@example
 #First we import the package.
-using StructuredLight
+using StructuredLight, CairoMakie
 
 #Define a function that calculates the nonlinear phase term.
 function non_linear_phase(ψ,m,n)
@@ -93,16 +95,17 @@ zᵣ = 1/2;
 
 # This would be the figure 1:
 rs = LinRange(-10,10,512)
-visualize(abs2.(get_images(rs,ms,2,-4zᵣ,15,10)),ratio=2)
+visualize(abs2.(get_images(rs,ms,2,-4zᵣ,15,10)))
 ```
 
 The other figures are just a variation of this one, by changing the distance from the waist and `n`.
 
 Alternatively, we can solve the complete nonlinear Schrödinger equation to get the initial profile:
 
-```julia
-using StructuredLight
+```@example
+using StructuredLight, CairoMakie
 rs = LinRange(-10,10,512)
+zᵣ = 1/2
 ψ₀ = lg(rs,rs,-4zᵣ)
 M = maximum(abs2,ψ₀)
 

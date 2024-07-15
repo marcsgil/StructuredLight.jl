@@ -12,7 +12,7 @@ free_propagation
 
 ```@example
 #The simplest usage would be the following:
-using StructuredLight
+using StructuredLight, CairoMakie
 
 rs = LinRange(-6,6,256)
 
@@ -22,12 +22,12 @@ rs = LinRange(-6,6,256)
 ψ = free_propagation(ψ₀,rs,rs,1) #Then, we propagate it by a distance z=1.
 
 #Here are the initial profiles the propagated beam, side by side.
-visualize([ψ₀,ψ] |> stack .|> abs2,ratio=2)
+visualize([ψ₀,ψ] |> stack .|> abs2)
 ```
 
 ```@example
 #We can also provide a collection of z values to produce an animation:
-using StructuredLight
+using StructuredLight, CairoMakie
 
 rs = LinRange(-12,12,256)
 zs = LinRange(0,1,64)
@@ -38,11 +38,13 @@ zs = LinRange(0,1,64)
 #Now the propagation is performed for each z ∈ zs. The output is a 3D array.
 ψs = free_propagation(ψ₀,rs,rs,zs)
 
-show_animation(abs2.(ψs),ratio=2)
+save_animation(abs2.(ψs), "lg_times_sin.mp4")
 ```
 
+![](lg_times_sin.mp4)
+
 ```@example
-using StructuredLight
+using StructuredLight, CairoMakie
 
 rs = LinRange(-4,4,256)
 zs = LinRange(.01,1/2,32)
@@ -56,8 +58,10 @@ scalings = @. √(1+4*zs^2) #Here, we introduce the scalings given by w(z)/w0
 
 #Note that the scalings compensate the diffraction of the beam.
 #Therefore, the animation seems still.
-show_animation(abs2.(ψs),ratio=2)
+save_animation(abs2.(ψs), "standing_still.mp4")
 ```
+
+![](standing_still.mp4)
 
 ### References
 
@@ -71,7 +75,7 @@ kerr_propagation
 
 ### Example 
 ```@example
-using StructuredLight
+using StructuredLight, CairoMakie
 
 rs = LinRange(-2.5,2.5,256) #The transverse grid
 zs = LinRange(0,.1,32) #The z grid
@@ -81,8 +85,11 @@ zs = LinRange(0,.1,32) #The z grid
 #We perform the propagation with a strong nonlinearity
 ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=100)
 
-show_animation(abs2.(ψ),ratio=2) #The beam colapses due to the self focusing effect
+save_animation(abs2.(ψ), "kerr.mp4") #The beam colapses due to the self focusing effect
 ```
+
+![](kerr.mp4)
+
 
 ### References
 
@@ -94,7 +101,7 @@ Both `free_propagation` and `kerr_propagation` can be run on Nvidia GPUs, which 
 
 Here is an example:
 ```julia
-using StructuredLight
+using StructuredLight, CairoMakie
 using CUDA #It is necessary to load the CUDA package
 
 ψ₀ = lg(rs,rs) |> cu #Transfers array to GPU
