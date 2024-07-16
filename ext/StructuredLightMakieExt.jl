@@ -42,12 +42,12 @@ function visualize(img::AbstractArray{T,4}; colormap=:jet, max_size=1080, share_
         width = max_size * width_factor ÷ height_factor
     end
 
-    fig = Figure(size=(height, width), figure_padding=0)
+    fig = Figure(size=(width, height), figure_padding=0)
     for (m, column) in enumerate(eachslice(img, dims=4))
         for (n, _img) in enumerate(eachslice(column, dims=3))
             ax = Axis(fig[m, n], aspect=DataAspect())
             hidedecorations!(ax)
-            heatmap!(ax, rotr90(_img); colormap, colorrange)
+            heatmap!(ax, _img; colormap, colorrange)
         end
     end
     fig
