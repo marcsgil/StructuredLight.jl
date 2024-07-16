@@ -56,11 +56,11 @@ zs = LinRange(0, 1, 32)
 
 # just x and y
 ψ₁ = rotated_hg(rs, rs, θ = 0.1, m=3, n=2)
-ψ₂ = [rotated_hg(x, y, θ = 0.1, m=3, n=2) for y in rs, x in rs]
+ψ₂ = [rotated_hg(x, y, θ = 0.1, m=3, n=2) for x in rs, y in rs]
 
 # x, y and z
 ψ₃ = rotated_hg(rs, rs, zs, θ = 0.1, m=3, n=2)
-ψ₄ = [rotated_hg(x, y, z, θ = 0.1, m=3, n=2) for y in rs, x in rs, z ∈ zs]
+ψ₄ = [rotated_hg(x, y, z, θ = 0.1, m=3, n=2) for x in rs, y in rs, z ∈ zs]
 
 ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
 
@@ -88,7 +88,7 @@ function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
 
     N = normalization_hg(m, n, γ)
 
-    @tullio _[j, k] := N * _hg(x[k], y[j], s, c; m, n, γ)
+    @tullio _[j, k] := N * _hg(x[j], y[k], s, c; m, n, γ)
 end
 
 function rotated_hg(x::Real, y::Real, z::Real;
@@ -117,7 +117,7 @@ function rotated_hg(x, y, z::Real;
     α = inv(1 + im * z / (k * γ^2))
     prefactor = normalization_hg(m, n, γ) * cis((m + n) * angle(α))
 
-    @tullio _[j, k] := prefactor * _hg(x[k], y[j], α, s, c; m, n, γ)
+    @tullio _[j, k] := prefactor * _hg(x[j], y[k], α, s, c; m, n, γ)
 end
 
 function rotated_hg(x, y, z;
@@ -136,7 +136,7 @@ function rotated_hg(x, y, z;
     end
     N = normalization_hg(m, n, γ)
 
-    @tullio _[j, k, l] := N * prefactor(z[l]) * _hg(x[k], y[j], α(z[l]), s, c; m, n, γ)
+    @tullio _[j, k, l] := N * prefactor(z[l]) * _hg(x[j], y[k], α(z[l]), s, c; m, n, γ)
 end
 
 """
@@ -165,11 +165,11 @@ zs = LinRange(0, 1, 32)
 
 # just x and y
 ψ₁ = hg(rs, rs, m=3, n=2)
-ψ₂ = [hg(x, y, m=3, n=2) for y in rs, x in rs]
+ψ₂ = [hg(x, y, m=3, n=2) for x in rs, y in rs]
 
 # x, y and z
 ψ₃ = hg(rs, rs, zs, m=3, n=2)
-ψ₄ = [hg(x, y, z, m=3, n=2) for y in rs, x in rs, z ∈ zs]
+ψ₄ = [hg(x, y, z, m=3, n=2) for x in rs, y in rs, z ∈ zs]
 
 ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
 
@@ -209,11 +209,11 @@ zs = LinRange(0, 1, 32)
 
 # just x and y
 ψ₁ = diagonal_hg(rs, rs, m=3, n=2)
-ψ₂ = [diagonal_hg(x, y, m=3, n=2) for y in rs, x in rs]
+ψ₂ = [diagonal_hg(x, y, m=3, n=2) for x in rs, y in rs]
 
 # x, y and z
 ψ₃ = diagonal_hg(rs, rs, zs, m=3, n=2)
-ψ₄ = [diagonal_hg(x, y, z, m=3, n=2) for y in rs, x in rs, z ∈ zs]
+ψ₄ = [diagonal_hg(x, y, z, m=3, n=2) for x in rs, y in rs, z ∈ zs]
 
 ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
 
@@ -278,11 +278,11 @@ zs = LinRange(0, 1, 32)
 
 # just x and y
 ψ₁ = lg(rs, rs, p=1, l=2)
-ψ₂ = [lg(x, y, p=1, l=2) for y in rs, x in rs]
+ψ₂ = [lg(x, y, p=1, l=2) for x in rs, y in rs]
 
 # x, y and z
 ψ₃ = lg(rs, rs, zs, p=1, l=2)
-ψ₄ = [lg(x, y, z, p=1, l=2) for y in rs, x in rs, z ∈ zs]
+ψ₄ = [lg(x, y, z, p=1, l=2) for x in rs, y in rs, z ∈ zs]
 
 ψ₃ ≈ ψ₄
 
@@ -308,7 +308,7 @@ function lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)))
 
     N = normalization_lg(p, l, γ)
 
-    @tullio _[j, k] := N * _lg(x[k], y[j]; p, l, γ)
+    @tullio _[j, k] := N * _lg(x[j], y[k]; p, l, γ)
 end
 
 function lg(x::Real, y::Real, z::Real;
@@ -337,7 +337,7 @@ function lg(x, y, z::Real;
     α = inv(1 + im * z / (k * γ^2))
     prefactor = normalization_lg(p, l, γ) * cis((2p + abs(l)) * angle(α))
 
-    @tullio _[j, k] := prefactor * _lg(x[k], y[j], α; p, l, γ)
+    @tullio _[j, k] := prefactor * _lg(x[j], y[k], α; p, l, γ)
 end
 
 function lg(x, y, z;
@@ -355,7 +355,7 @@ function lg(x, y, z;
     end
     N = normalization_lg(p, l, γ)
 
-    @tullio _[j, k, m] := N * prefactor(z[m]) * _lg(x[k], y[j], α(z[m]); p, l, γ)
+    @tullio _[j, k, m] := N * prefactor(z[m]) * _lg(x[j], y[k], α(z[m]); p, l, γ)
 end
 
 """

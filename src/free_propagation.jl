@@ -18,42 +18,42 @@ get_ndrange(ψ, z) = (size(ψ)..., length(z))
 
 @kernel function fresnel_kernel!(ψ, x, y, z::Number, k)
     i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(-z * (x[j]^2 + y[i]^2) / 2k)
+    ψ[i, j] *= cis(-z * (x[i]^2 + y[j]^2) / 2k)
 end
 
 @kernel function fresnel_kernel!(ψ, x, y, z::Number, k, scaling)
     i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(-z / scaling * (x[j]^2 + y[i]^2) / 2k)
+    ψ[i, j] *= cis(-z / scaling * (x[i]^2 + y[j]^2) / 2k)
 end
 
 @kernel function pre_kernel!(ψ, x, y, z::Number, k, scaling)
     i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(k * (x[j]^2 + y[i]^2) * (1 - scaling) / 2z) / scaling
+    ψ[i, j] *= cis(k * (x[i]^2 + y[j]^2) * (1 - scaling) / 2z) / scaling
 end
 
 @kernel function post_kernel!(ψ, x, y, z::Number, k, scaling)
     i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(k * (x[j]^2 + y[i]^2) * (scaling - 1) * scaling / 2z)
+    ψ[i, j] *= cis(k * (x[i]^2 + y[j]^2) * (scaling - 1) * scaling / 2z)
 end
 
 @kernel function fresnel_kernel!(ψ, x, y, z, k)
     i, j, l = @index(Global, NTuple)
-    ψ[i, j, l] *= cis(-z[l] * (x[j]^2 + y[i]^2) / 2k)
+    ψ[i, j, l] *= cis(-z[l] * (x[i]^2 + y[j]^2) / 2k)
 end
 
 @kernel function fresnel_kernel!(ψ, x, y, z, k, scaling)
     i, j, l = @index(Global, NTuple)
-    ψ[i, j, l] *= cis(-z[l] / scaling[l] * (x[j]^2 + y[i]^2) / 2k)
+    ψ[i, j, l] *= cis(-z[l] / scaling[l] * (x[i]^2 + y[j]^2) / 2k)
 end
 
 @kernel function pre_kernel!(ψ, x, y, z, k, scaling)
     i, j, l = @index(Global, NTuple)
-    ψ[i, j, l] *= cis(k * (x[j]^2 + y[i]^2) * (1 - scaling[l]) / 2z[l]) / scaling[l]
+    ψ[i, j, l] *= cis(k * (x[i]^2 + y[j]^2) * (1 - scaling[l]) / 2z[l]) / scaling[l]
 end
 
 @kernel function post_kernel!(ψ, x, y, z, k, scaling)
     i, j, l = @index(Global, NTuple)
-    ψ[i, j, l] *= cis(k * (x[j]^2 + y[i]^2) * (scaling[l] - 1) * scaling[l] / 2z[l])
+    ψ[i, j, l] *= cis(k * (x[i]^2 + y[j]^2) * (scaling[l] - 1) * scaling[l] / 2z[l])
 end
 
 
