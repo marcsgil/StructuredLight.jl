@@ -71,28 +71,39 @@ true
 
 See also [`hg`](@ref), [`diagonal_hg`](@ref), [`lg`](@ref).
 """
-function rotated_hg(x::Real, y::Real; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
+function rotated_hg(x::Real, y::Real; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
     s, c = sincos(θ)
 
-    normalization_hg(m, n, γ) * _hg(x, y, s, c; m, n, γ)
+    result = _hg(x, y, s, c; m, n, γ)
+
+    if include_normalization
+        result *= normalization_hg(m, n, γ)
+    end
+
+    result
 end
 
-function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
+function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
     s, c = sincos(θ)
 
-    N = normalization_hg(m, n, γ)
+    @tullio result[j, k] := _hg(x[j], y[k], s, c; m, n, γ)
 
-    @tullio _[j, k] := N * _hg(x[j], y[k], s, c; m, n, γ)
+    if include_normalization
+        N = normalization_hg(m, n, γ)
+        result *= N
+    end
+
+    result
 end
 
 function rotated_hg(x::Real, y::Real, z::Real;
-    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
     T = float(typeof(sum((x, y, z, w, k))))
@@ -101,12 +112,16 @@ function rotated_hg(x::Real, y::Real, z::Real;
     s, c = sincos(θ)
 
     α = inv(1 + im * z / (k * γ^2))
-    prefactor = normalization_hg(m, n, γ) * cis((m + n) * angle(α))
+    if include_normalization
+        prefactor = normalization_hg(m, n, γ) * cis((m + n) * angle(α))
+    else
+        prefactor = cis((m + n) * angle(α))
+    end
     prefactor * _hg(x, y, α, s, c; m, n, γ)
 end
 
 function rotated_hg(x, y, z::Real;
-    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
     T = float_type(x, y, z, w, k)
@@ -115,13 +130,17 @@ function rotated_hg(x, y, z::Real;
     s, c = sincos(θ)
 
     α = inv(1 + im * z / (k * γ^2))
-    prefactor = normalization_hg(m, n, γ) * cis((m + n) * angle(α))
+    if include_normalization
+        prefactor = normalization_hg(m, n, γ) * cis((m + n) * angle(α))
+    else
+        prefactor = cis((m + n) * angle(α))
+    end
 
     @tullio _[j, k] := prefactor * _hg(x[j], y[k], α, s, c; m, n, γ)
 end
 
 function rotated_hg(x, y, z;
-    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
     T = float_type(x, y, z, w, k)
@@ -134,9 +153,15 @@ function rotated_hg(x, y, z;
     function prefactor(z)
         cis(-(m + n) * atan(z / (k * γ^2)))
     end
-    N = normalization_hg(m, n, γ)
 
-    @tullio _[j, k, l] := N * prefactor(z[l]) * _hg(x[j], y[k], α(z[l]), s, c; m, n, γ)
+    @tullio result[j, k, l] := prefactor(z[l]) * _hg(x[j], y[k], α(z[l]), s, c; m, n, γ)
+
+    if include_normalization
+        N = normalization_hg(m, n, γ)
+        result *= N
+    end
+
+    result
 end
 
 """
@@ -293,26 +318,37 @@ true
 
 See also [`rotated_hg`](@ref), [`hg`](@ref), [`diagonal_hg`](@ref).
 """
-function lg(x::Real, y::Real; p::Integer=0, l::Integer=0, w=one(eltype(x)))
+function lg(x::Real, y::Real; p::Integer=0, l::Integer=0, w=one(eltype(x)), include_normalization=true)
     @assert p ≥ 0
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
 
-    normalization_lg(p, l, γ) * _lg(x, y; p, l, γ)
+    result = _lg(x, y; p, l, γ)
+
+    if include_normalization
+        result *= normalization_lg(p, l, γ)
+    end
+
+    result
 end
 
-function lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)))
+function lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)), include_normalization=true)
     @assert p ≥ 0
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
 
-    N = normalization_lg(p, l, γ)
+    @tullio result[j, k] := _lg(x[j], y[k]; p, l, γ)
 
-    @tullio _[j, k] := N * _lg(x[j], y[k]; p, l, γ)
+    if include_normalization
+        N = normalization_lg(p, l, γ)
+        result *= N
+    end
+
+    result
 end
 
 function lg(x::Real, y::Real, z::Real;
-    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     @assert p ≥ 0
 
     T = float_type(x, y, z, w, k)
@@ -321,13 +357,19 @@ function lg(x::Real, y::Real, z::Real;
 
     α = inv(1 + im * z / (k * γ^2))
     prefactor = cis((2p + abs(l)) * angle(α))
-    N = normalization_lg(p, l, γ)
 
-    N * prefactor * _lg(x, y, α; p, l, γ)
+    result = prefactor * _lg(x, y, α; p, l, γ)
+
+    if include_normalization
+        N = normalization_lg(p, l, γ)
+        result *= N
+    end
+
+    result
 end
 
 function lg(x, y, z::Real;
-    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     @assert p ≥ 0
 
     T = float_type(x, y, z, w, k)
@@ -335,13 +377,18 @@ function lg(x, y, z::Real;
     k = convert(T, k)
 
     α = inv(1 + im * z / (k * γ^2))
-    prefactor = normalization_lg(p, l, γ) * cis((2p + abs(l)) * angle(α))
+
+    if include_normalization
+        prefactor = normalization_lg(p, l, γ) * cis((2p + abs(l)) * angle(α))
+    else
+        prefactor = cis((2p + abs(l)) * angle(α))
+    end
 
     @tullio _[j, k] := prefactor * _lg(x[j], y[k], α; p, l, γ)
 end
 
 function lg(x, y, z;
-    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
+    p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     @assert p ≥ 0
 
     T = float_type(x, y, z, w, k)
@@ -353,9 +400,16 @@ function lg(x, y, z;
     function prefactor(z)
         cis(-(2p + abs(l)) * atan(z / (k * γ^2)))
     end
-    N = normalization_lg(p, l, γ)
 
-    @tullio _[j, k, m] := N * prefactor(z[m]) * _lg(x[j], y[k], α(z[m]); p, l, γ)
+
+    @tullio result[j, k, m] := prefactor(z[m]) * _lg(x[j], y[k], α(z[m]); p, l, γ)
+
+    if include_normalization
+        N = normalization_lg(p, l, γ)
+        result *= N
+    end
+
+    result
 end
 
 """
@@ -370,7 +424,7 @@ The calculation is done over a grid defined by `x` and `y`.
 To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(x,y,fx,fy;k=k)`
 """
 function lens(x, y, fx, fy; k=1)
-    @tullio result[j, i] := cis(-k * (x[i]^2 / fx + y[j]^2 / fy) / 2)
+    @tullio result[i, j] := cis(-k * (x[i]^2 / fx + y[j]^2 / fy) / 2)
 end
 
 """
