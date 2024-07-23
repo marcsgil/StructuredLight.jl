@@ -4,31 +4,43 @@ import StructuredLight: visualize, save_animation
 using Makie, LinearAlgebra
 
 """
-    visualize(img::AbstractMatrix{T}; colormap=:jet) where {T<:Real}
-    visualize(img::AbstractArray{T,3}; colormap=:jet, max_size=1080, share_colorrange=false) where {T<:Real}
-    visualize(img::AbstractArray{T,4}; colormap=:jet, max_size=1080, share_colorrange=false) where {T<:Real}
+    visualize(img;
+    colormap=:jet, colorrange=Makie.automatic,
+    share_colorrange=false, max_size=1080)
 
-Vizualize the image(s) `img` with the `colormap`.
+Vizualize the image(s) `img`.
+
+`img` can be a 2D, 3D or 4D array.
 
 When using the 3D Array signature, the third dimension is interpreted as defining different images, which are displayed in a row.
 
 When using the 4D Array signature, the third and fourth dimensions are interpreted as defining different images, which are displayed in a matrix.
 
+## keyword arguments
+
+`colormap` defines the colormap of the image(s).
+
 `max_size` defines the maximum side length of the image, which is passed to `Makie.Figure`.
 
-`share_colorrange` defines if the color range should be shared between all images.
+`share_colorrange` defines if the color range should be shared between all images. Has no effect for the 2D Array signature.
+
+`colorrange` defines the color range of the image(s).
 """
 visualize(img; kwargs...) = visualize(Array(img); kwargs...)
 
-function visualize(img::AbstractMatrix{T}; colormap=:jet, colorrange=Makie.automatic) where {T<:Real}
-    visualize(reshape(img, size(img)..., 1); colormap, max_size=1080, colorrange)
+function visualize(img::AbstractMatrix{T};
+    colormap=:jet, colorrange=Makie.automatic,
+    share_colorrange=false, max_size=1080) where {T<:Real}
+    visualize(reshape(img, size(img)..., 1); colormap, colorrange, share_colorrange, max_size)
 end
 
-function visualize(img::AbstractArray{T,3}; colormap=:jet, max_size=1080, share_colorrange=false, colorrange=Makie.automatic) where {T<:Real}
-    visualize(reshape(img, size(img)..., 1); colormap, max_size, share_colorrange, colorrange)
+function visualize(img::AbstractArray{T,3}; colormap=:jet, colorrange=Makie.automatic,
+    share_colorrange=false, max_size=1080) where {T<:Real}
+    visualize(reshape(img, size(img)..., 1); colormap, colorrange, share_colorrange, max_size)
 end
 
-function visualize(img::AbstractArray{T,4}; colormap=:jet, max_size=1080, share_colorrange=false, colorrange=Makie.automatic) where {T<:Real}
+function visualize(img::AbstractArray{T,4}; colormap=:jet, colorrange=Makie.automatic,
+    share_colorrange=false, max_size=1080) where {T<:Real}
     colorrange = share_colorrange ? extrema(img) : colorrange
 
     width_factor = size(img, 1) * size(img, 4)
