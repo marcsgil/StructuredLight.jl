@@ -20,16 +20,16 @@ When using the 4D Array signature, the third and fourth dimensions are interpret
 """
 visualize(img; kwargs...) = visualize(Array(img); kwargs...)
 
-function visualize(img::AbstractMatrix{T}; colormap=:jet) where {T<:Real}
-    visualize(reshape(img, size(img)..., 1); colormap, max_size=1080)
+function visualize(img::AbstractMatrix{T}; colormap=:jet, colorrange=Makie.automatic) where {T<:Real}
+    visualize(reshape(img, size(img)..., 1); colormap, max_size=1080, colorrange)
 end
 
-function visualize(img::AbstractArray{T,3}; colormap=:jet, max_size=1080, share_colorrange=false) where {T<:Real}
-    visualize(reshape(img, size(img)..., 1); colormap, max_size, share_colorrange)
+function visualize(img::AbstractArray{T,3}; colormap=:jet, max_size=1080, share_colorrange=false, colorrange=Makie.automatic) where {T<:Real}
+    visualize(reshape(img, size(img)..., 1); colormap, max_size, share_colorrange, colorrange)
 end
 
-function visualize(img::AbstractArray{T,4}; colormap=:jet, max_size=1080, share_colorrange=false) where {T<:Real}
-    colorrange = share_colorrange ? extrema(img) : Makie.automatic
+function visualize(img::AbstractArray{T,4}; colormap=:jet, max_size=1080, share_colorrange=false, colorrange=Makie.automatic) where {T<:Real}
+    colorrange = share_colorrange ? extrema(img) : colorrange
 
     width_factor = size(img, 1) * size(img, 4)
     height_factor = size(img, 2) * size(img, 3)
