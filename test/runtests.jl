@@ -168,4 +168,8 @@ if CUDA.functional()
             @test isapprox(overlap(ψ1, ψ2, xs, ys), 1, atol=0.03)
         end
     end
+
+    @testset "Kerr" begin
+        @test include("kerr_test.jl")
+    end
 end
