@@ -29,6 +29,11 @@ function _hg(x, y, α, s, c; m::Integer=0, n::Integer=0, γ=one(eltype(x)))
     α * exp(α * (-X^2 - Y^2) / 2) * hermite(abs(α) * X, m) * hermite(abs(α) * Y, n)
 end
 
+@kernel function hg_kernel!(dest, x, y, s, c, m, n, γ)
+    j, k = @index(Global, NTuple)
+    dest[j, k] = _hg(x[j], y[k], s, c; m, n, γ)
+end
+
 """
     rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)))
     rotated_hg(x, y, z; 
@@ -93,6 +98,10 @@ function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), incl
     s, c = sincos(θ)
 
     @tullio result[j, k] := _hg(x[j], y[k], s, c; m, n, γ)
+    """result = similar(x, length(x), length(y))
+    backend = get_backend(result)
+    kernel! = hg_kernel!(backend, 256)
+    kernel!(result, x, y, s, c, m, n, γ; ndrange=size(result))"""
 
     if include_normalization
         N = normalization_hg(m, n, γ)
