@@ -10,31 +10,49 @@ function distribute(N, v)
     [round(Int, N * δ / Δ, RoundUp) for δ in δs]
 end
 
-function dispersion_step!(ψ, kernel, plan, iplan)
+@kernel function mul_kernel!(ψ, ϕ)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= ϕ[i, j]
+end
+
+@kernel function self_phase_kernel!(ψ, factor)
+    i, j = @index(Global, NTuple)
+    ψ[i, j] *= cis(factor * abs2(ψ[i, j]))
+end
+
+@kernel function phase_kernel!(phases, quadratic_qs, Δz)
+    i, j = @index(Global, NTuple)
+    phases[i, j] = cis(Δz * quadratic_qs[i, j])
+end
+
+function dispersion_step!(ψ, phases, plan, iplan, mul_func!)
     plan * ψ
-    @tullio ψ[i, j] *= kernel[i, j]
+    mul_func!(ψ, phases; ndrange=size(ψ))
     iplan * ψ
 end
 
-function type_2A_step!(ψ, kernel, plan, iplan, factor, repetitions)
+function type_2A_step!(ψ, phases, plan, iplan, factor, repetitions, mul_func!, self_phase_func!, ndrange)
     if !iszero(repetitions)
-        @tullio ψ[i, j] *= cis(factor * abs2(ψ[i, j]) / 2)
+        self_phase_func!(ψ, factor / 2; ndrange)
         for _ in 1:repetitions-1
-            dispersion_step!(ψ, kernel, plan, iplan)
-            @tullio ψ[i, j] *= cis(factor * abs2(ψ[i, j]))
+            dispersion_step!(ψ, phases, plan, iplan, mul_func!)
+            self_phase_func!(ψ, factor; ndrange)
         end
-        dispersion_step!(ψ, kernel, plan, iplan)
-        @tullio ψ[i, j] *= cis(factor * abs2(ψ[i, j]) / 2)
+        dispersion_step!(ψ, phases, plan, iplan, mul_func!)
+        self_phase_func!(ψ, factor / 2; ndrange)
     end
 end
 
-function kerr_propagation_loop!(dest, ψ₀, kernel, phases, z, divisions, g, k, plan, iplan)
+function kerr_propagation_loop!(dest, ψ₀, phases, quadratic_qs, z, divisions, g, k, plan, iplan,
+    mul_func!, self_phase_func!, phase_func!)
     Δz = z / divisions
     phase_evolution_factor = g * Δz / 2k
 
-    @tullio kernel[i, j] = cis(Δz * phases[i, j])
+    ndrange = size(ψ₀)
+    phase_func!(phases, quadratic_qs, Δz; ndrange)
 
-    type_2A_step!(ψ₀, kernel, plan, iplan, phase_evolution_factor, divisions)
+    type_2A_step!(ψ₀, phases, plan, iplan, phase_evolution_factor, divisions,
+        mul_func!, self_phase_func!, ndrange)
 
     fftshift!(dest, ψ₀)
 end
@@ -62,14 +80,20 @@ function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
 
     ψ = ifftshift(ψ₀)
 
-    qxs = reciprocal_grid(xs, shift=true)
-    qys = reciprocal_grid(ys, shift=true)
+    qxs = to_device(reciprocal_grid(xs, shift=true), ψ₀)
+    qys = to_device(reciprocal_grid(ys, shift=true), ψ₀)
 
-    @tullio phases[i, j] := -(qxs[j]^2 + qys[i]^2) / 2k
-    kernel = similar(ψ₀)
+    quadratic_qs = @. -(qxs^2 + qys'^2) / 2k
+    phases = similar(ψ₀)
+
+    backend = get_backend(ψ)
+    mul_func! = mul_kernel!(backend, 256)
+    self_phase_func! = self_phase_kernel!(backend, 256)
+    phase_func! = phase_kernel!(backend, 256)
 
     for (i, divisions) in enumerate(steps)
-        kerr_propagation_loop!(view(result, :, :, i), ψ, kernel, phases, Zs[i+1] - Zs[i], divisions, g, k, plan, iplan)
+        kerr_propagation_loop!(view(result, :, :, i), ψ, phases, quadratic_qs, Zs[i+1] - Zs[i], divisions, g, k,
+            plan, iplan, mul_func!, self_phase_func!, phase_func!)
     end
 
     result
