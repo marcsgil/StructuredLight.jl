@@ -4,7 +4,7 @@ function assert_hermite_indices(idxs...)
     end
 end
 
-float_type(args...) = float(typeof(sum(first, args)))
+float_type(args...) = promote_type((eltype(arg) for arg ∈ args)...) |> float
 
 """
     normalization_hg(m,n,γ=1)
@@ -78,7 +78,7 @@ See also [`hg`](@ref), [`diagonal_hg`](@ref), [`lg`](@ref).
 """
 function rotated_hg(x::Real, y::Real; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
-    T = float_type(x, y, w)
+    T = float_type(x, y, w, θ)
     γ = convert(T, w / √2)
     s, c = sincos(θ)
 
@@ -93,15 +93,14 @@ end
 
 function rotated_hg(x, y; θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
-    T = float_type(x, y, w)
+    T = float_type(x, y, w, θ)
     γ = convert(T, w / √2)
     s, c = sincos(θ)
 
-    @tullio result[j, k] := _hg(x[j], y[k], s, c; m, n, γ)
-    """result = similar(x, length(x), length(y))
+    result = similar(x, length(x), length(y))
     backend = get_backend(result)
     kernel! = hg_kernel!(backend, 256)
-    kernel!(result, x, y, s, c, m, n, γ; ndrange=size(result))"""
+    kernel!(result, x, y, s, c, m, n, γ; ndrange=size(result))
 
     if include_normalization
         N = normalization_hg(m, n, γ)
@@ -115,7 +114,7 @@ function rotated_hg(x::Real, y::Real, z::Real;
     θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
-    T = float(typeof(sum((x, y, z, w, k))))
+    T = float_type(x, y, z, w, k, θ)
     γ = convert(T, w / √2)
     k = convert(T, k)
     s, c = sincos(θ)
@@ -133,7 +132,7 @@ function rotated_hg(x, y, z::Real;
     θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
-    T = float_type(x, y, z, w, k)
+    T = float_type(x, y, z, w, k, θ)
     γ = convert(T, w / √2)
     k = convert(T, k)
     s, c = sincos(θ)
@@ -152,7 +151,7 @@ function rotated_hg(x, y, z;
     θ, m::Integer=0, n::Integer=0, w=one(eltype(x)), k=one(eltype(x)), include_normalization=true)
     assert_hermite_indices(m, n)
 
-    T = float_type(x, y, z, w, k)
+    T = float_type(x, y, z, w, k, θ)
     γ = convert(T, w / √2)
     k = convert(T, k)
     s, c = sincos(θ)
@@ -214,8 +213,8 @@ true
 
 See also [`rotated_hg`](@ref), [`diagonal_hg`](@ref), [`lg`](@ref).
 """
-hg(x, y; kwargs...) = rotated_hg(x, y; θ=zero(first(x)), kwargs...)
-hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=zero(first(x)), kwargs...)
+hg(x, y; kwargs...) = rotated_hg(x, y; θ=zero(eltype(x)), kwargs...)
+hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=zero(eltype(x)), kwargs...)
 
 """
     diagonal_hg(x, y; m::Integer=0, n::Integer=0, w=one(eltype(x)))
@@ -258,8 +257,8 @@ true
 
 See also [`rotated_hg`](@ref), [`hg`](@ref), [`lg`](@ref).
 """
-diagonal_hg(x, y; kwargs...) = rotated_hg(x, y; θ=oftype(float(first(x)), π / 4), kwargs...)
-diagonal_hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=oftype(float(first(x)), π / 4), kwargs...)
+diagonal_hg(x, y; kwargs...) = rotated_hg(x, y; θ=convert(eltype(x), π / 4), kwargs...)
+diagonal_hg(x, y, z; kwargs...) = rotated_hg(x, y, z; θ=convert(eltype(x), π / 4), kwargs...)
 
 function _lg(x, y; p::Integer, l::Integer, γ=one(eltype(x)))
     X = x / γ
@@ -286,6 +285,10 @@ function normalization_lg(p, l, γ=1)
     convert(float(eltype(γ)), √inv(prod(p+1:p+abs(l)) * π) / γ)
 end
 
+@kernel function lg_kernel!(dest, x, y, p, l, γ)
+    j, k = @index(Global, NTuple)
+    dest[j, k] = _lg(x[j], y[k]; p, l, γ)
+end
 """
     lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)))
     lg(x, y, z; p::Integer=0, l::Integer=0, w=one(eltype(x)), k=one(eltype(x)))
@@ -346,7 +349,10 @@ function lg(x, y; p::Integer=0, l::Integer=0, w=one(eltype(x)), include_normaliz
     T = float_type(x, y, w)
     γ = convert(T, w / √2)
 
-    @tullio result[j, k] := _lg(x[j], y[k]; p, l, γ)
+    result = similar(x, complex(T), length(x), length(y))
+    backend = get_backend(result)
+    kernel! = lg_kernel!(backend, 256)
+    kernel!(result, x, y, p, l, γ; ndrange=size(result))
 
     if include_normalization
         N = normalization_lg(p, l, γ)
