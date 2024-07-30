@@ -15,8 +15,9 @@ export direct_grid, reciprocal_grid
 include("ortho_poly.jl")
 export laguerre, hermite
 
-include("initial_profiles.jl")
+include("initial_profiles copy.jl")
 export _hg, rotated_hg, hg, diagonal_hg, _lg, lg, lens, tilted_lens
+export lg!
 
 include("free_propagation.jl")
 export free_propagation
