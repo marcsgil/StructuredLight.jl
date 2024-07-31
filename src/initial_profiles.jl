@@ -285,7 +285,7 @@ function normalization_lg(p, l, γ=1)
     convert(float(eltype(γ)), √inv(prod(p+1:p+abs(l)) * π) / γ)
 end
 
-@kernel function lg_kernel!(dest, x, y; p, l, γ)
+@kernel function lg_kernel!(dest, x, y, p, l, γ)
     j, k = @index(Global, NTuple)
     dest[j, k] = _lg(x[j], y[k]; p, l, γ)
 end
