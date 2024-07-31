@@ -1,7 +1,7 @@
 using StructuredLight, LinearAlgebra, CUDA
 using Test, Documenter
 
-"""DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight); recursive=true)
+DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight); recursive=true)
 doctest(StructuredLight)
 
 @testset "Hermite Gauss" begin
@@ -32,7 +32,7 @@ end
         end
     end
 
-end"""
+end
 
 @testset "Laguerre Gauss" begin
     xs = LinRange(-10, 10, 1024)
@@ -49,7 +49,7 @@ end"""
 
 end
 
-"""@testset "Scalled Hermite Gauss" begin
+@testset "Scalled Hermite Gauss" begin
     xs = LinRange(-10, 10, 1024)
     ys = LinRange(-10, 10, 512)
 
@@ -172,4 +172,4 @@ if CUDA.functional()
             @test isapprox(overlap(ψ1, ψ2, xs, ys), 1, atol=0.03)
         end
     end
-end"""
+end
