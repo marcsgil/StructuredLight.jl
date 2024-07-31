@@ -69,7 +69,7 @@ The outputs are saved at every `zs`, which is a number or a collection of number
 `total_steps` is the number of steps over which we discretize the propagation. The larger the `total_steps`, the better the precision and the slower is the calculation.
 """
 function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
-    Zs = vcat(0, zs)
+    Zs = Array(vcat(0, zs))
 
     steps = distribute(total_steps, Zs)
 

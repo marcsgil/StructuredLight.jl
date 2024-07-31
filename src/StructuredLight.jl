@@ -8,8 +8,6 @@ function visualize end
 function save_animation end
 export visualize, save_animation
 
-include("utils.jl")
-
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
 
@@ -17,8 +15,7 @@ include("ortho_poly.jl")
 export laguerre, hermite
 
 include("initial_profiles.jl")
-export _hg, rotated_hg, hg, diagonal_hg, _lg, lg, lens, tilted_lens
-export lg!
+export hg!, hg, diagonal_hg, diagonal_hg!, lg!, lg
 
 include("free_propagation.jl")
 export free_propagation

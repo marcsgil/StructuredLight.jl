@@ -84,6 +84,7 @@ function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype
     dest
 end
 
+diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg!(dest, x, y, z; θ=π / 4, m, n, γ, k, N)
 diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg(x, y, z; θ=π / 4, m, n, γ, k, N)
 
 """

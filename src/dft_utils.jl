@@ -11,7 +11,8 @@ If `shift = true`, then we we return an array containing the nonegative and then
 """
 symetric_integer_range(N; shift=false) = shift ? vcat(0:N-N÷2-1, -N÷2:-1) : (-N÷2:N-N÷2-1)
 
-interval(grid) = grid[2] - grid[1]
+interval(grid::Array) = grid[begin+1] - grid[begin]
+interval(grid) = interval(Array(grid[begin:begin+1]))
 
 reciprocal_interval(grid) = convert(eltype(grid), 2π) / length(grid) / interval(grid)
 

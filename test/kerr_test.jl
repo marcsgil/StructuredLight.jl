@@ -31,7 +31,7 @@ function calculate_projections(rs, zs, g, l)
 
     numerical_c = Matrix{real(eltype(δψ))}(undef, (length(zs), abs(l) + 3))
 
-    analytic_c = [abs(nonlinear_c(z, p, l)) for z in zs, p in 0:abs(l)+2]
+    analytic_c = [abs(nonlinear_c(z, p, l)) for z in Array(zs), p in 0:abs(l)+2]
 
     for p in axes(numerical_c, 2)
         corrected_ψ = lg(rs, rs, zs, p=p - 1, l=l, γ=1 / √3)
@@ -41,10 +41,22 @@ function calculate_projections(rs, zs, g, l)
     analytic_c, numerical_c
 end
 
+function run_kerr_tests(rs, zs, g, l, identifier="")
+    @testset "Kerr $identifier" begin
+        analytic_c, numerical_c = calculate_projections(rs, zs, g, l)
+        @test isapprox(analytic_c, numerical_c, rtol=1e-3)
+    end
+end
+
 rs = LinRange(-22, 22, 256)
 zs = LinRange(0, 5, 16)
 g = 0.01
 l = 2
-analytic_c, numerical_c = calculate_projections(rs, zs, g, l)
 
-isapprox(analytic_c, numerical_c, rtol=1e-3)
+run_kerr_tests(rs, zs, g, l)
+
+if CUDA.functional()
+    CUDA.allowscalar(false)
+
+    run_kerr_tests(rs |> collect |> CuArray, zs |> collect |> CuArray, g, l, " (CUDA)")
+end
