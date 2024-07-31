@@ -1,6 +1,6 @@
 module StructuredLight
 
-using FFTW, LinearAlgebra, KernelAbstractions
+using FFTW, LinearAlgebra, KernelAbstractions, Bessels
 
 FFTW.set_num_threads(8)
 
@@ -25,5 +25,7 @@ export kerr_propagation
 
 include("misc.jl")
 export overlap
+
+include("holograms.jl")
 
 end

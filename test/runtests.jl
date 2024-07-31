@@ -7,3 +7,5 @@ doctest(StructuredLight)
 include("propagation_test.jl")
 
 include("kerr_test.jl")
+
+include("hologram_tests.jl")
