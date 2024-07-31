@@ -27,5 +27,6 @@ include("misc.jl")
 export overlap
 
 include("holograms.jl")
+export BesselJ!, generate_hologram, generate_hologram!
 
 end
