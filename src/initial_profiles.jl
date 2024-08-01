@@ -161,3 +161,35 @@ function lg(x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x
     lg!(dest, x, y, z; p, l, γ, k, N)
     dest
 end
+
+linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
+    c * f(args...; kwargs...)
+end |> sum
+
+function get_paralelized_function_2D(f)
+    @kernel function kernel_2D!(dest, x, y)
+        i, j = @index(Global, NTuple)
+        dest[i, j] = f(x[i], y[j])
+    end
+
+    function f!(dest, x, y)
+        backend = get_backend(dest)
+        kernel! = kernel_2D!(backend)
+        kernel!(dest, x, y; ndrange=size(dest))
+    end
+
+    function f_parallel(x, y)
+        T = complex_type(x, y)
+        dest = similar(x, T, size(x, 1), size(y, 1))
+        f!(dest, x, y)
+        dest
+    end
+
+    f_parallel, f!
+end
+
+function linear_combination_2D!(dest, fs, cs, x, y)
+    f_parallel, f! = get_paralelized_function_2D(linear_combination(fs, cs))
+    f_parallel, f!
+
+end
