@@ -1,9 +1,5 @@
 complex_type(args...) = promote_type((eltype(arg) for arg ∈ args)...) |> complex
 
-get_size(::Number) = ()
-get_size(x) = (length(x))
-get_size(x, args...) = (get_size(x)..., get_size(args...)...)
-
 get_α(z, γ, k) = inv(1 + im * z / (k * γ^2))
 
 """
@@ -16,7 +12,7 @@ function normalization_hg(m, n, γ::T) where {T}
 end
 
 """
-    hg(x, y, z; θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
 
 Compute a Hermite-Gaussian mode.
 

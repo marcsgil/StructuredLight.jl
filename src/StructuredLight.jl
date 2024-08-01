@@ -11,6 +11,9 @@ export visualize, save_animation
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
 
+include("misc.jl")
+export overlap
+
 include("ortho_poly.jl")
 export laguerre, hermite
 
@@ -23,10 +26,9 @@ export free_propagation
 include("kerr_propagation.jl")
 export kerr_propagation
 
-include("misc.jl")
-export overlap
-
 include("holograms.jl")
-export BesselJ!, generate_hologram, generate_hologram!
+export BesselJ1, Simple, generate_hologram, generate_hologram!
+
+include("precompile.jl")
 
 end

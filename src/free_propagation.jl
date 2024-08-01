@@ -1,54 +1,32 @@
-to_device(::Any, y) = y
-
-function create_shifted_ψ(ψ, ::Number)
-    shifted_ψ = similar(ψ, complex(eltype(ψ)))
-    ifftshift!(shifted_ψ, ψ)
-end
-
-function create_shifted_ψ(ψ, z)
-    shifted_ψ = similar(ψ, complex(eltype(ψ)), (size(ψ)..., length(z)))
-    for dest ∈ eachslice(shifted_ψ, dims=3)
-        ifftshift!(dest, ψ)
+function get_shifted_ψ(ψ, x, y, z)
+    shifted_ψ = similar(ψ, complex(eltype(ψ)), get_size(x, y, z)...)
+    for slice ∈ eachslice(shifted_ψ, dims=3)
+        fftshift!(slice, ψ, (1, 2))
     end
     shifted_ψ
 end
 
-get_ndrange(ψ, ::Number) = size(ψ)
-get_ndrange(ψ, z) = (size(ψ)..., length(z))
-
-@kernel function fresnel_kernel!(ψ, x, y, z::Number, k)
-    i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(-z * (x[i]^2 + y[j]^2) / 2k)
+function get_shifted_ψ(ψ, x, y, z::Number)
+    shifted_ψ = similar(ψ, complex(eltype(ψ)), get_size(x, y, z)...)
+    fftshift!(shifted_ψ, ψ)
+    shifted_ψ
 end
 
-@kernel function fresnel_kernel!(ψ, x, y, z::Number, k, scaling)
-    i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(-z / scaling * (x[i]^2 + y[j]^2) / 2k)
-end
-
-@kernel function pre_kernel!(ψ, x, y, z::Number, k, scaling)
-    i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(k * (x[i]^2 + y[j]^2) * (1 - scaling) / 2z) / scaling
-end
-
-@kernel function post_kernel!(ψ, x, y, z::Number, k, scaling)
-    i, j = @index(Global, NTuple)
-    ψ[i, j] *= cis(k * (x[i]^2 + y[j]^2) * (scaling - 1) * scaling / 2z)
-end
-
+#Without scaling
 @kernel function fresnel_kernel!(ψ, x, y, z, k)
     i, j, l = @index(Global, NTuple)
     ψ[i, j, l] *= cis(-z[l] * (x[i]^2 + y[j]^2) / 2k)
 end
 
-@kernel function fresnel_kernel!(ψ, x, y, z, k, scaling)
-    i, j, l = @index(Global, NTuple)
-    ψ[i, j, l] *= cis(-z[l] / scaling[l] * (x[i]^2 + y[j]^2) / 2k)
-end
-
+#With scaling
 @kernel function pre_kernel!(ψ, x, y, z, k, scaling)
     i, j, l = @index(Global, NTuple)
     ψ[i, j, l] *= cis(k * (x[i]^2 + y[j]^2) * (1 - scaling[l]) / 2z[l]) / scaling[l]
+end
+
+@kernel function fresnel_kernel!(ψ, x, y, z, k, scaling)
+    i, j, l = @index(Global, NTuple)
+    ψ[i, j, l] *= cis(-z[l] / scaling[l] * (x[i]^2 + y[j]^2) / 2k)
 end
 
 @kernel function post_kernel!(ψ, x, y, z, k, scaling)
@@ -97,15 +75,16 @@ function free_propagation(ψ, x, y, z; k=1)
     qx = to_device(ψ, reciprocal_grid(x, shift=true))
     qy = to_device(ψ, reciprocal_grid(y, shift=true))
 
-    shifted_ψ = create_shifted_ψ(ψ, z)
+    shifted_ψ = get_shifted_ψ(ψ, x, y, z)
+    shifted_ψ_3d = reshape(shifted_ψ, length(x), length(y), length(z))
 
-    backend = get_backend(ψ)
-    _fresnel_kernel! = fresnel_kernel!(backend, 256)
-    ndrange = get_ndrange(ψ, z)
+    backend = get_backend(shifted_ψ_3d)
+    _fresnel_kernel! = fresnel_kernel!(backend)
+    ndrange = size(shifted_ψ_3d)
 
-    fft!(shifted_ψ, (1, 2))
-    _fresnel_kernel!(shifted_ψ, qx, qy, z, k; ndrange)
-    ifft!(shifted_ψ, (1, 2))
+    fft!(shifted_ψ_3d, (1, 2))
+    _fresnel_kernel!(shifted_ψ_3d, qx, qy, z, k; ndrange)
+    ifft!(shifted_ψ_3d, (1, 2))
 
     fftshift(shifted_ψ, (1, 2))
 end
@@ -120,19 +99,21 @@ function free_propagation(ψ, x, y, z, scaling; k=1)
     qx = to_device(ψ, reciprocal_grid(x, shift=true))
     qy = to_device(ψ, reciprocal_grid(y, shift=true))
 
-    shifted_ψ = create_shifted_ψ(ψ, z)
+    shifted_ψ = get_shifted_ψ(ψ, x, y, z)
 
-    backend = get_backend(ψ)
-    _fresnel_kernel! = fresnel_kernel!(backend, 256)
-    _pre_kernel! = pre_kernel!(backend, 256)
-    _post_kernel! = post_kernel!(backend, 256)
-    ndrange = get_ndrange(ψ, z)
+    shifted_ψ_3d = reshape(shifted_ψ, length(x), length(y), length(z))
 
-    _pre_kernel!(shifted_ψ, _x, _y, _z, k, scaling; ndrange)
-    fft!(shifted_ψ, (1, 2))
-    _fresnel_kernel!(shifted_ψ, qx, qy, z ./ scaling, k; ndrange)
-    ifft!(shifted_ψ, (1, 2))
-    _post_kernel!(shifted_ψ, _x, _y, _z, k, scaling; ndrange)
+    backend = get_backend(shifted_ψ_3d)
+    _fresnel_kernel! = fresnel_kernel!(backend)
+    _pre_kernel! = pre_kernel!(backend)
+    _post_kernel! = post_kernel!(backend)
+    ndrange = size(shifted_ψ_3d)
+
+    _pre_kernel!(shifted_ψ_3d, _x, _y, _z, k, scaling; ndrange)
+    fft!(shifted_ψ_3d, (1, 2))
+    _fresnel_kernel!(shifted_ψ_3d, qx, qy, z ./ scaling, k; ndrange)
+    ifft!(shifted_ψ_3d, (1, 2))
+    _post_kernel!(shifted_ψ_3d, _x, _y, _z, k, scaling; ndrange)
 
     fftshift(shifted_ψ, (1, 2))
 end
