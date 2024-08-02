@@ -1,6 +1,6 @@
 # Introduction
 
-This package provides tools to simulate the propagation of paraxial light beams. This includes the calculation of [Laguerre-Gauss](@ref) and [Hermite-Gauss](@ref) beam profiles, the propagation in free space ([`free_propagation`](@ref)) as well as in Kerr media ([`kerr_propagation`](@ref)). Both the propagation methods can be run on Nvidia GPUs (check [CUDA support](@ref) for details). We also provide methods that help the [Visualization](@ref) of such beams.
+This package provides tools to simulate the propagation of paraxial light beams. This includes the calculation of [Laguerre-Gauss](@ref) and [Hermite-Gauss](@ref) beam profiles, the action of [Lenses](@ref), the propagation in free space ([`free_propagation`](@ref)) as well as in Kerr media ([`kerr_propagation`](@ref)). Both the propagation methods can be run on Nvidia GPUs (check [CUDA support](@ref) for details). We also provide methods that help the [Visualization](@ref) of such beams.
 
 ## Minimal Example
 
