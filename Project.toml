@@ -1,38 +1,34 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
-version = "0.2"
+version = "0.2.0"
 
 [deps]
-ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"
-Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
-Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
-VideoIO = "d6d074c3-1acf-5d4c-9a43-ef38773959a2"
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [extensions]
 StructuredLightCUDAExt = "CUDA"
+StructuredLightMakieExt = "Makie"
 
 [compat]
-CUDA = "5"
-ColorSchemes = "3"
-FourierTools = "0.4"
-Images = "0.26"
-KernelAbstractions = "0.9"
-Reexport = "1"
-Tullio = "0.3"
-VideoIO = "1"
+Bessels = "0.2"
+FFTW = "1"
+KernelAbstractions = "0.8,0.9"
+PrecompileTools = "1"
 julia = "1.10"
 
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "CUDA"]
+test = ["Test", "CUDA", "Documenter"]

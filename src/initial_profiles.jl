@@ -1,301 +1,203 @@
-"""
-    laguerre_coefficients(n::Integer,α=0)
+complex_type(args...) = promote_type((eltype(arg) for arg ∈ args)...) |> complex
 
-Compute the coefficients of the nth generalized Laguerre Polynomial.
+get_α(z, γ, k) = inv(1 + im * z / (k * γ^2))
+
 """
-function laguerre_coefficients(n, α=0)
-    ntuple(i -> -(-1)^i * binomial(n + α, n - i + 1) / factorial(i - 1), n + 1)
+    normalization_hg(m,n,γ)
+
+Compute the normalization constant for the Hermite-Gaussian modes.
+"""
+function normalization_hg(m, n, γ::T) where {T}
+    convert(float(T), inv(γ * √(π * 2^(m + n))) * √(prod(inv, 1:m, init=1) * prod(inv, 1:n, init=1)))
 end
 
 """
-    normalization_lg(;p,l,γ₀=1)
+    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+
+Compute a Hermite-Gaussian mode.
+
+`x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
+
+# Other Arguments:
+
+- `m`: x index
+
+- `n`: y index
+
+- `w`: beam's waist
+
+- `k`: wavenumber
+
+# Examples
+
+```jldoctest
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
+
+# just x and y
+ψ₁ = hg(rs, rs, m=3, n=2)
+ψ₂ = [hg(x, y, m=3, n=2) for x in rs, y in rs]
+
+# x, y and z
+ψ₃ = hg(rs, rs, zs, m=3, n=2)
+ψ₄ = [hg(x, y, z, m=3, n=2) for x in rs, y in rs, z ∈ zs]
+
+ψ₁ ≈ ψ₂ && ψ₃ ≈ ψ₄
+
+# output
+
+true
+```
+
+See also [`diagonal_hg`](@ref), [`lg`](@ref).
+"""
+function hg(x::Number, y::Number, z::Number; θ=zero(x), m::Integer=0, n::Integer=0, γ=one(x), k=one(x), N=normalization_hg(m, n, γ))
+    s, c = sincos(θ)
+    X = (x * c + y * s) / γ
+    Y = (-x * s + y * c) / γ
+    α = get_α(z, γ, k)
+
+    N * α * exp(α * (-X^2 - Y^2) / 2 + im * (m + n) * angle(α)) * hermite(abs(α) * X, m) * hermite(abs(α) * Y, n)
+end
+
+@kernel function hg_kernel!(dest, x, y, z, θ, m, n, γ, k, N)
+    r, s, t = @index(Global, NTuple)
+    dest[r, s, t] = hg(x[r], y[s], z[t]; θ, m, n, γ, k, N)
+end
+
+function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ))
+    backend = get_backend(dest)
+    kernel! = hg_kernel!(backend)
+    ndrange = (length(x), length(y), length(z))
+    dest_3d = reshape(dest, ndrange...)
+    kernel!(dest_3d, x, y, z, θ, m, n, γ, k, N; ndrange)
+end
+
+function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ))
+    T = complex_type(x, y, z, θ, m, n, γ, k, N)
+    dest = similar(x, T, get_size(x, y, z)...)
+    hg!(dest, x, y, z; θ, m, n, γ, k, N)
+    dest
+end
+
+diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg!(dest, x, y, z; θ=π / 4, m, n, γ, k, N)
+
+"""
+    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+
+Compute a diagonal Hermite-Gaussian mode. It is calculated by setting `θ=π/4` in [`hg`](@ref).
+
+See also [`lg`](@ref).
+"""
+diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg(x, y, z; θ=π / 4, m, n, γ, k, N)
+
+"""
+    normalization_lg(p,l,γ=1)
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
-function normalization_lg(; p, l, γ₀=1)
-    try
-        oftype(float(γ₀), √(factorial(p) / factorial(p + abs(l)) / π) / γ₀)
-    catch
-        oftype(float(γ₀), √(factorial(big(p)) / factorial(big(p + abs(l))) / π) / γ₀)
-    end
-end
-
-
-function core_lg(x, y, α, γ₀, l, coefs)
-    r2 = (x^2 + y^2) / γ₀^2
-    α * exp(-α * r2 / 2) * (abs(α) * (x + im * sign(l) * y) / γ₀)^abs(l) * evalpoly(abs2(α) * r2, coefs)
+function normalization_lg(p, l, γ::T) where {T}
+    convert(float(T), √inv(prod(p+1:p+abs(l)) * π) / γ)
 end
 
 """
-    lg(x::Real,y::Real,z::Real=0;
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+    lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)))
 
-    lg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+Compute a diagonal Hermite-Gaussian mode.
 
-    lg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
-        p::Integer=0,l::Integer=0,w0::Real=1,k::Real=1) where T<: Real
+`x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
 
-Compute the Laguerre-Gaussian mode. 
+# Other Arguments:
 
-For the first signature, the mode is calculated at point `(x,y,z)`
+- `p`: radial index
 
-For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
+- `l`: topological charge
 
-For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
+- `w`: beam's waist
 
-The optional keyword arguments are:
+- `k`: wavenumber
 
-`p`: radial index
+# Examples
 
-`l`: topological charge
+```jldoctest
+rs = LinRange(-5, 5, 256)
+zs = LinRange(0, 1, 32)
 
-`w0`: beam's waist
+# just x and y
+ψ₁ = lg(rs, rs, p=1, l=2)
+ψ₂ = [lg(x, y, p=1, l=2) for x in rs, y in rs]
 
-`k`: wavenumber
+# x, y and z
+ψ₃ = lg(rs, rs, zs, p=1, l=2)
+ψ₄ = [lg(x, y, z, p=1, l=2) for x in rs, y in rs, z ∈ zs]
+
+ψ₃ ≈ ψ₄
+
+# output
+
+true
+```
+
+See also [`hg`](@ref), [`diagonal_hg`](@ref).
 """
-function lg(x::AbstractVector{T}, y::AbstractVector{T}, z::Real=0;
-    p::Integer=0, l::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
+function lg(x::Real, y::Real, z::Real=zero(x); p=0, l=0, γ=one(x), k=one(x), N=normalization_lg(p, l, γ))
+    X = x / γ
+    Y = y / γ
+    r2 = X^2 + Y^2
+    L = abs(l)
+    α = get_α(z, γ, k)
 
-    @assert p ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    coefs = laguerre_coefficients(p, convert(float(T), abs(l)))
-
-    α = 1 / (1 + im * z / (k * γ₀^2))
-    prefactor = normalization_lg(p=p, l=l, γ₀=γ₀) * cis((2p + abs(l)) * angle(α))
-
-    @tullio result[j, i] := prefactor * core_lg(x[i], y[j], α, γ₀, l, coefs)
+    N * α * exp(-α * r2 / 2 + im * (2p + abs(l)) * angle(α)) * (abs(α) * (X + im * sign(l) * Y))^L * laguerre(abs2(α) * r2, p, L)
 end
 
-function lg(x::AbstractVector{T}, y::AbstractVector{T}, z::AbstractVector{T};
-    p::Integer=0, l::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
-
-    @assert p ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    coefs = laguerre_coefficients(p, convert(float(T), abs(l)))
-
-    function f(x, y, α)
-        normalization_lg(p=p, l=l, γ₀=γ₀) * cis((2p + abs(l)) * angle(α)) * core_lg(x, y, α, γ₀, l, coefs)
-    end
-
-    @tullio result[j, i, l] := f(x[i], y[j], inv(1 + im * z[l] / (k * γ₀^2)))
+@kernel function lg_kernel!(dest, x, y, z, p, l, γ, k, N)
+    r, s, t = @index(Global, NTuple)
+    dest[r, s, t] = lg(x[r], y[s], z[t]; p, l, γ, k, N)
 end
 
-function lg(x::Real, y::Real, z::Real=0;
-    p::Integer=0, l::Integer=0, w0::Real=1, k::Real=1)
-
-    first(lg([x], [y], z, p=p, l=l, k=k, w0=w0))
+function lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, γ))
+    backend = get_backend(dest)
+    kernel! = lg_kernel!(backend)
+    ndrange = (length(x), length(y), length(z))
+    dest_3d = reshape(dest, ndrange...)
+    kernel!(dest_3d, x, y, z, p, l, γ, k, N; ndrange)
 end
 
-
-function hermite_coefficients(n)
-    if iseven(n)
-        ntuple(l -> -factorial(n) * (-1)^(n ÷ 2 - l) / (factorial(2l - 2) * factorial(n ÷ 2 - l + 1)) |> Integer, n ÷ 2 + 1)
-    else
-        ntuple(l -> -factorial(n) * (-1)^(n ÷ 2 - l) / (factorial(2l - 1) * factorial(n ÷ 2 - l + 1)) |> Integer, n ÷ 2 + 1)
-    end
+function lg(x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, γ))
+    T = complex_type(x, y, z, p, l, γ, k, N)
+    dest = similar(x, T, get_size(x, y, z)...)
+    lg!(dest, x, y, z; p, l, γ, k, N)
+    dest
 end
 
-"""
-    hermite(x,n,coefs)
+"""linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
+    c * f(args...; kwargs...)
+end |> sum
 
-Evaluate the `n` th Hermite polynomial at `x`, given the coefficients `coefs`.
-"""
-hermite(x, n, coefs) = iseven(n) ? evalpoly(4x^2, coefs) : 2x * evalpoly(4x^2, coefs)
-
-"""
-    normalization_hg(;m,n,γ₀=1)
-
-Compute the normalization constant for the Laguerre-Gaussian modes.
-"""
-function normalization_hg(; m, n, γ₀=1)
-    try
-        oftype(float(γ₀), inv((γ₀ * √(π * 2^(m + n) * factorial(n) * factorial(m)))))
-    catch
-        oftype(float(γ₀), inv((γ₀ * √(π * 2^(m + n) * factorial(big(n)) * factorial(big(m))))))
-    end
-end
-
-function core_hg(x, y, α, γ₀, m, n, x_coefs, y_coefs, isdiagonal)
-    ξ = isdiagonal ? (x + y) / (√2 * γ₀) : x / γ₀
-    η = isdiagonal ? (x - y) / (√2 * γ₀) : y / γ₀
-    α * exp(-α * (ξ^2 + η^2) / 2) * hermite(abs(α) * ξ, m, x_coefs) * hermite(abs(α) * η, n, y_coefs)
-end
-
-"""
-    hg(x::Real,y::Real,z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-    function hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-    hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the Hermite-Gaussian mode.
-
-For the first signature, the mode is calculated at point `(x,y,z)`
-
-For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
-
-For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
-
-The optional keyword arguments are:
-
-`m`: horizontal index
-
-`n`: vertical index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
-function hg(x::AbstractVector{T}, y::AbstractVector{T}, z::Real=0;
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
-
-    @assert m ≥ 0
-    @assert n ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    x_coefs = hermite_coefficients(m)
-    y_coefs = hermite_coefficients(n)
-
-    α = inv(1 + im * z / (k * γ₀^2))
-    prefactor = normalization_hg(m=m, n=n, γ₀=γ₀) * cis((m + n) * angle(α))
-
-    @tullio result[j, i] := prefactor * core_hg(x[i], y[j], α, γ₀, m, n, x_coefs, y_coefs, false)
-end
-
-function hg(x::AbstractVector{T}, y::AbstractVector{T}, z::AbstractVector{T};
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
-
-    @assert m ≥ 0
-    @assert n ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    x_coefs = hermite_coefficients(m)
-    y_coefs = hermite_coefficients(n)
-
-    function f(x, y, α)
-        normalization_hg(m=m, n=n, γ₀=γ₀) * cis((m + n) * angle(α)) * core_hg(x, y, α, γ₀, m, n, x_coefs, y_coefs, false)
+function get_paralelized_function_2D(f)
+    @kernel function kernel_2D!(dest, x, y)
+        i, j = @index(Global, NTuple)
+        dest[i, j] = f(x[i], y[j])
     end
 
-    @tullio result[j, i, l] := f(x[i], y[j], inv(1 + im * z[l] / (k * γ₀^2)))
-end
-
-function hg(x::Real, y::Real, z::Real=0;
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1)
-
-    first(hg([x], [y], z, m=m, n=n, k=k, w0=w0))
-end
-
-"""
-    diagonal_hg(x::Real,y::Real,z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-    function diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::Real=0;
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-    diagonal_hg(x::AbstractVector{T},y::AbstractVector{T},z::AbstractVector{T};
-        m::Integer=0,n::Integer=0,w0::Real=1,k::Real=1) where T<: Real
-
-Compute the diagonal Hermite-Gaussian mode.
-
-For the first signature, the mode is calculated at point `(x,y,z)`
-
-For the second signature, the mode is calculated over a grid defined by `x` and `y` at a distance `z` from the focus.
-
-For the third signature, the mode is calculated over a grid defined by `x`, `y` and `z`.
-
-The optional keyword arguments are:
-
-`m`: diagonal index
-
-`n`: antidiagonal index
-
-`w0`: beam's waist
-
-`k`: wavenumber
-"""
-function diagonal_hg(x::AbstractVector{T}, y::AbstractVector{T}, z::Real=0;
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
-
-    @assert m ≥ 0
-    @assert n ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    x_coefs = hermite_coefficients(m)
-    y_coefs = hermite_coefficients(n)
-
-    α = inv(1 + im * z / (k * γ₀^2))
-    prefactor = normalization_hg(m=m, n=n, γ₀=γ₀) * cis((m + n) * angle(α))
-
-    @tullio result[j, i] := prefactor * core_hg(x[i], y[j], α, γ₀, m, n, x_coefs, y_coefs, true)
-end
-
-function diagonal_hg(x::AbstractVector{T}, y::AbstractVector{T}, z::AbstractVector{T};
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1) where {T<:Real}
-
-    @assert m ≥ 0
-    @assert n ≥ 0
-
-    γ₀ = convert(float(T), w0 / √2)
-    k = convert(float(T), k)
-
-    x_coefs = hermite_coefficients(m)
-    y_coefs = hermite_coefficients(n)
-
-    function f(x, y, α)
-        normalization_hg(m=m, n=n, γ₀=γ₀) * cis((m + n) * angle(α)) * core_hg(x, y, α, γ₀, m, n, x_coefs, y_coefs, true)
+    function f!(dest, x, y)
+        backend = get_backend(dest)
+        kernel! = kernel_2D!(backend)
+        kernel!(dest, x, y; ndrange=size(dest))
     end
 
-    @tullio result[j, i, l] := f(x[i], y[j], inv(1 + im * z[l] / (k * γ₀^2)))
+    function f_parallel(x, y)
+        T = complex_type(x, y)
+        dest = similar(x, T, size(x, 1), size(y, 1))
+        f!(dest, x, y)
+        dest
+    end
+
+    f_parallel, f!
 end
 
-function diagonal_hg(x::Real, y::Real, z::Real=0;
-    m::Integer=0, n::Integer=0, w0::Real=1, k::Real=1)
+function linear_combination_2D!(dest, fs, cs, x, y)
+    f_parallel, f! = get_paralelized_function_2D(linear_combination(fs, cs))
+    f_parallel, f!
 
-    first(diagonal_hg([x], [y], z, m=m, n=n, k=k, w0=w0))
-end
-
-"""
-    lens(x,y,fx,fy;k=1)
-
-Output an array containing the phase shift introduced by a lens of focal lengths `fx` and `fy`.
-
-The calculation is done over a grid defined by `x` and `y`.
-
-`k` is the incident wavenumber.
-
-To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* lens(x,y,fx,fy;k=k)`
-"""
-function lens(x, y, fx, fy; k=1)
-    @tullio result[j, i] := cis(-k * (x[i]^2 / fx + y[j]^2 / fy) / 2)
-end
-
-"""
-    tilted_lens(x,y,f,ϕ;k=1)
-
-Output an array containing the phase shift introduced by a spherical lens of focal length `f` tilted by an angle `ϕ`.
-
-The calculation is done over a grid defined by `x` and `y`.
-
-`k` is the incident wavenumber.
-
-To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* tilted_lens(x,y,f,ϕ;k=k)`
-"""
-function tilted_lens(x, y, f, ϕ; k=1)
-    lens(x, y, sec(ϕ) * f, cos(ϕ) * f, k=k)
-end
+end"""

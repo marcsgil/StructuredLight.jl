@@ -1,21 +1,24 @@
 module StructuredLight
 
-using Reexport
+using FFTW, LinearAlgebra, KernelAbstractions, Bessels
 
-using FourierTools, LinearAlgebra
+FFTW.set_num_threads(8)
 
-using Images, VideoIO
-@reexport using ColorSchemes
-using Tullio
+function visualize end
+function save_animation end
+export visualize, save_animation
 
 include("dft_utils.jl")
 export direct_grid, reciprocal_grid
 
-include("initial_profiles.jl")
-export lg, hg, diagonal_hg, lens, tilted_lens
+include("misc.jl")
+export overlap
 
-include("visualization.jl")
-export visualize, show_animation, save_animation
+include("ortho_poly.jl")
+export laguerre, hermite
+
+include("initial_profiles.jl")
+export hg!, hg, diagonal_hg, diagonal_hg!, lg!, lg
 
 include("free_propagation.jl")
 export free_propagation
@@ -23,7 +26,12 @@ export free_propagation
 include("kerr_propagation.jl")
 export kerr_propagation
 
-include("misc.jl")
-export overlap
+include("holograms.jl")
+export BesselJ1, Simple, generate_hologram, generate_hologram!
+
+include("aberration_correction.jl")
+export lens!, lens, tilted_lens!, tilted_lens
+
+include("precompile.jl")
 
 end
