@@ -58,7 +58,7 @@ Analytical propagation of a Hermite-Gauss with adjusted waist:
 using StructuredLight, CairoMakie
 rs = LinRange(-6,6,256) 
 zs = LinRange(0,.5,32)
-ψs = hg(rs,rs,zs,m=1,n=2,w=.5)
+ψs = hg(rs,rs,zs,m=1,n=2,γ=.4)
 save_animation(abs2.(ψs),"prop_adjusted_waist.mp4")
 ```
 
@@ -94,12 +94,6 @@ save_animation(abs2.(ψs),"prop_adjusted_k.mp4")
 ```
 
 ![](prop_adjusted_k.mp4)
-
-## Rotated Hermite-Gauss
-
-```@docs
-rotated_hg
-```
 
 ## Lenses
 

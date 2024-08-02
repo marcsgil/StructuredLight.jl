@@ -81,6 +81,14 @@ function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype
 end
 
 diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg!(dest, x, y, z; θ=π / 4, m, n, γ, k, N)
+
+"""
+    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+
+Compute a diagonal Hermite-Gaussian mode. It is calculated by setting `θ=π/4` in [`hg`](@ref).
+
+See also [`lg`](@ref).
+"""
 diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg(x, y, z; θ=π / 4, m, n, γ, k, N)
 
 """
@@ -130,7 +138,7 @@ zs = LinRange(0, 1, 32)
 true
 ```
 
-See also [`rotated_hg`](@ref), [`hg`](@ref), [`diagonal_hg`](@ref).
+See also [`hg`](@ref), [`diagonal_hg`](@ref).
 """
 function lg(x::Real, y::Real, z::Real=zero(x); p=0, l=0, γ=one(x), k=one(x), N=normalization_lg(p, l, γ))
     X = x / γ
@@ -162,7 +170,7 @@ function lg(x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x
     dest
 end
 
-linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
+"""linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
     c * f(args...; kwargs...)
 end |> sum
 
@@ -192,4 +200,4 @@ function linear_combination_2D!(dest, fs, cs, x, y)
     f_parallel, f! = get_paralelized_function_2D(linear_combination(fs, cs))
     f_parallel, f!
 
-end
+end"""

@@ -54,7 +54,7 @@ function visualize(img::AbstractArray{T,4}; colormap=:jet, colorrange=Makie.auto
         width = max_size * width_factor ÷ height_factor
     end
 
-    fig = Figure(size=(width, height), figure_padding=0)
+    fig = Figure(size=(height, width), figure_padding=0)
     for (m, column) in enumerate(eachslice(img, dims=4))
         for (n, _img) in enumerate(eachslice(column, dims=3))
             ax = Axis(fig[m, n], aspect=DataAspect())
@@ -91,7 +91,6 @@ function save_animation(img::AbstractArray{T,3}, path;
         height = max_size
         width = max_size * width_factor ÷ height_factor
     end
-    width, height
 
     fig = Figure(size=(height, width), figure_padding=0)
     ax = Axis(fig[1, 1], aspect=DataAspect())

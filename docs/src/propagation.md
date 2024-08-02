@@ -47,11 +47,11 @@ save_animation(abs2.(ψs), "lg_times_sin.mp4")
 using StructuredLight, CairoMakie
 
 rs = LinRange(-4,4,256)
-zs = LinRange(.01,1/2,32)
+zs = LinRange(.01,1,32)
 
 #This is a gaussian mode
 ψ₀ = lg(rs,rs)
-scalings = @. √(1+4*zs^2) #Here, we introduce the scalings given by w(z)/w0
+scalings = @. √(1+zs^2) #Here, we introduce the scalings given by w(z)/w0
 
 #Now we propagate, including the scalings
 ψs = free_propagation(ψ₀,rs,rs,zs,scalings)
@@ -78,12 +78,12 @@ kerr_propagation
 using StructuredLight, CairoMakie
 
 rs = LinRange(-2.5,2.5,256) #The transverse grid
-zs = LinRange(0,.1,32) #The z grid
+zs = LinRange(0,.12,32) #The z grid
 
 ψ₀ = lg(rs,rs) #Calculates the fundamental Laguerre-Gaussian mode
 
 #We perform the propagation with a strong nonlinearity
-ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=100)
+ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=200)
 
 save_animation(abs2.(ψ), "kerr.mp4") #The beam colapses due to the self focusing effect
 ```

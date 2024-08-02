@@ -73,7 +73,8 @@ function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
 
     steps = distribute(total_steps, Zs)
 
-    result = similar(ψ₀, size(ψ₀)..., length(zs))
+    result = similar(ψ₀, get_size(xs, ys, zs)...)
+    result_3D = reshape(result, length(xs), length(ys), length(zs))
 
     plan = plan_fft!(ψ₀)
     iplan = plan_ifft!(ψ₀)
@@ -92,7 +93,7 @@ function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
     phase_func! = phase_kernel!(backend, 256)
 
     for (i, divisions) in enumerate(steps)
-        kerr_propagation_loop!(view(result, :, :, i), ψ, phases, quadratic_qs, Zs[i+1] - Zs[i], divisions, g, k,
+        kerr_propagation_loop!(view(result_3D, :, :, i), ψ, phases, quadratic_qs, Zs[i+1] - Zs[i], divisions, g, k,
             plan, iplan, mul_func!, self_phase_func!, phase_func!)
     end
 

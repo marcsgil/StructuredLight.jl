@@ -2,7 +2,6 @@
 
 ## Mode Converter
 
-
 In this example, we reproduce the results of [Beijersbergen, Marco W., et al. "Astigmatic laser mode converters and transfer of orbital angular momentum." Optics Communications 96.1-3 (1993): 123-132.](https://www.sciencedirect.com/science/article/pii/003040189390535D), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
 
 ```@example
@@ -14,7 +13,8 @@ w = √((2 + √2) * f / k)
 rs = LinRange(-4w, 4w, 512)
 zs = LinRange(0, 2d, 64)
 ##
-ψ₀ = lg(rs, rs, -d; w, k, l=1, p=0) .* lens(rs, rs, Inf, f; k)
+ψ₀ = lg(rs, rs, -d; γ = w / √2, k, l=1, p=0)
+lens!(ψ₀, rs, rs, Inf, f; k) #Applies a cylindrical lens
 ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
 ψs = free_propagation(ψ₀, rs, rs, zs; k)
 
@@ -26,12 +26,12 @@ visualize(abs2.([ψ₀, ψ₁] |> stack))
 In this example, we reproduce the results of [Pravin Vaity et al., "Measuring topological charge of optical vortices using a tilted convex lens," Phys. Lett. A, vol. 377, no. 15, pp. 1154-1156, 2013. DOI: 10.1016/j.physleta.2013.02.030](https://www.sciencedirect.com/science/article/abs/pii/S0375960113001953?casa_token=4qY1zlrA1jAAAAAA:siRwxg9tPju8XHJkGtAjGVXJacg7pBbaZyFJUQscNaQplQ2ciYyoMQOlTexOlyaW9VSQBDViPph4), where it is shown that a tilted lens can "transform" a Laguerre-Gauss mode in a diagonal Hermite-Gauss mode.
 
 ```@example
-#Here, we initialize the package and define the experimental parameters:
 using StructuredLight, CairoMakie
 
 #All quantities have unit of (inverse) meter
 
 w = 0.16e-3 #Waist
+γ = w / sqrt(2)
 λ = 632.8e-9 #Wavelength
 k = 2π/λ #Wavenumber
 f = 50e-2 #Focal length of the lens
@@ -44,7 +44,8 @@ z_cr = z₀/(z₀/f-1) #Conversion distance
 
 # Now, we set up our grid and the initial profile by including the action of a tilted lens:
 rs = LinRange(-70w,70w,1024)
-ψ₀ = lg(rs,rs,z₀,l=3,w=w,k=k) .* tilted_lens(rs,rs,f,ξ,k=k)
+ψ₀ = lg(rs,rs,z₀,l=3; γ, k)
+tilted_lens!(ψ₀,rs,rs,f,ξ;k) #Applies the lens
 
 # Finally, we propagate. 
 # Note that we introduce scalings, because, otherwise, the beam would be to small.

@@ -29,6 +29,9 @@ export kerr_propagation
 include("holograms.jl")
 export BesselJ1, Simple, generate_hologram, generate_hologram!
 
+include("aberration_correction.jl")
+export lens!, lens, tilted_lens!, tilted_lens
+
 include("precompile.jl")
 
 end
