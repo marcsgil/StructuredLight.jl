@@ -20,6 +20,7 @@ StructuredLightMakieExt = "Makie"
 
 [compat]
 Bessels = "0.2"
+CUDA = "5"
 FFTW = "1"
 KernelAbstractions = "0.8,0.9"
 PrecompileTools = "1"
