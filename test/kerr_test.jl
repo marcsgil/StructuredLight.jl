@@ -25,16 +25,16 @@ end
 function calculate_projections(rs, zs, g, l)
     ψ₀ = lg(rs, rs; l)
 
-    free_ψ = free_propagation(ψ₀, rs, rs, zs)
+    free_ψ = free_propagation(ψ₀, rs, rs, zs, k=2)
 
-    δψ = (kerr_propagation(ψ₀, rs, rs, zs, 64, g=g) .- free_ψ) ./ g
+    δψ = (kerr_propagation(ψ₀, rs, rs, zs, 64, g=g, k=2) .- free_ψ) ./ g
 
     numerical_c = Matrix{real(eltype(δψ))}(undef, (length(zs), abs(l) + 3))
 
     analytic_c = [abs(nonlinear_c(z, p, l)) for z in Array(zs), p in 0:abs(l)+2]
 
     for p in axes(numerical_c, 2)
-        corrected_ψ = lg(rs, rs, zs, p=p - 1, l=l, γ=1 / √3)
+        corrected_ψ = lg(rs, rs, zs, p=p - 1, l=l, w=1 / √3, k=2)
         numerical_c[:, p] = overlap(corrected_ψ, δψ, rs, rs) .|> abs
     end
 
@@ -48,7 +48,7 @@ function run_kerr_tests(rs, zs, g, l, identifier="")
     end
 end
 
-rs = LinRange(-22, 22, 256)
+rs = LinRange(-15, 15, 256)
 zs = LinRange(0, 5, 16)
 g = 0.01
 l = 2

@@ -14,7 +14,7 @@ using PrecompileTools
                 kerr_propagation(desired, rs, rs, z, 2)
             end
 
-            input = hg(rs, rs; γ=10)
+            input = hg(rs, rs; w=10)
 
             holo = generate_hologram(desired, input, rs, rs, 255, 50, -50, Simple)
             holo = generate_hologram(desired, input, rs, rs, 255, 50, -50, BesselJ1)

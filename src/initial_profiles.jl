@@ -1,18 +1,18 @@
 complex_type(args...) = promote_type((eltype(arg) for arg ∈ args)...) |> complex
 
-get_α(z, γ, k) = inv(1 + im * z / (k * γ^2))
+get_α(z, w, k) = inv(1 + im * 2z / (k * w^2))
 
 """
-    normalization_hg(m,n,γ)
+    normalization_hg(m,n,w)
 
 Compute the normalization constant for the Hermite-Gaussian modes.
 """
-function normalization_hg(m, n, γ::T) where {T}
-    convert(float(T), inv(γ * √(π * 2^(m + n))) * √(prod(inv, 1:m, init=1) * prod(inv, 1:n, init=1)))
+function normalization_hg(m, n, w::T) where {T}
+    convert(float(T), √2 * inv(w * √(π * 2^(m + n))) * √(prod(inv, 1:m, init=1) * prod(inv, 1:n, init=1)))
 end
 
 """
-    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)))
 
 Compute a Hermite-Gaussian mode.
 
@@ -51,53 +51,54 @@ true
 
 See also [`diagonal_hg`](@ref), [`lg`](@ref).
 """
-function hg(x::Number, y::Number, z::Number; θ=zero(x), m::Integer=0, n::Integer=0, γ=one(x), k=one(x), N=normalization_hg(m, n, γ))
+function hg(x::Real, y::Real, z::Real=zero(x); θ=zero(x), m::Integer=0, n::Integer=0, w=one(x), k=one(x), N=normalization_hg(m, n, w))
     s, c = sincos(θ)
+    γ = w / oftype(float(w), √2)
     X = (x * c + y * s) / γ
     Y = (-x * s + y * c) / γ
-    α = get_α(z, γ, k)
+    α = get_α(z, w, k)
 
     N * α * exp(α * (-X^2 - Y^2) / 2 + im * (m + n) * angle(α)) * hermite(abs(α) * X, m) * hermite(abs(α) * Y, n)
 end
 
-@kernel function hg_kernel!(dest, x, y, z, θ, m, n, γ, k, N)
+@kernel function hg_kernel!(dest, x, y, z, θ, m, n, w, k, N)
     r, s, t = @index(Global, NTuple)
-    dest[r, s, t] = hg(x[r], y[s], z[t]; θ, m, n, γ, k, N)
+    dest[r, s, t] = hg(x[r], y[s], z[t]; θ, m, n, w, k, N)
 end
 
-function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ))
+function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
     backend = get_backend(dest)
     kernel! = hg_kernel!(backend)
     ndrange = (length(x), length(y), length(z))
     dest_3d = reshape(dest, ndrange...)
-    kernel!(dest_3d, x, y, z, θ, m, n, γ, k, N; ndrange)
+    kernel!(dest_3d, x, y, z, θ, m, n, w, k, N; ndrange)
 end
 
-function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ))
-    T = complex_type(x, y, z, θ, m, n, γ, k, N)
+function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
+    T = complex_type(x, y, z, θ, m, n, w, k, N)
     dest = similar(x, T, get_size(x, y, z)...)
-    hg!(dest, x, y, z; θ, m, n, γ, k, N)
+    hg!(dest, x, y, z; θ, m, n, w, k, N)
     dest
 end
 
-diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg!(dest, x, y, z; θ=π / 4, m, n, γ, k, N)
+diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg!(dest, x, y, z; θ=π / 4, m, n, w, k, N)
 
 """
-    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)))
+    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)))
 
 Compute a diagonal Hermite-Gaussian mode. It is calculated by setting `θ=π/4` in [`hg`](@ref).
 
 See also [`lg`](@ref).
 """
-diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, γ)) = hg(x, y, z; θ=π / 4, m, n, γ, k, N)
+diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg(x, y, z; θ=π / 4, m, n, w, k, N)
 
 """
-    normalization_lg(p,l,γ=1)
+    normalization_lg(p,l,w=1)
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
 """
-function normalization_lg(p, l, γ::T) where {T}
-    convert(float(T), √inv(prod(p+1:p+abs(l)) * π) / γ)
+function normalization_lg(p, l, w::T) where {T}
+    convert(float(T), √inv(prod(p+1:p+abs(l)) * π) * √2 / w)
 end
 
 """
@@ -140,33 +141,34 @@ true
 
 See also [`hg`](@ref), [`diagonal_hg`](@ref).
 """
-function lg(x::Real, y::Real, z::Real=zero(x); p=0, l=0, γ=one(x), k=one(x), N=normalization_lg(p, l, γ))
+function lg(x::Real, y::Real, z::Real=zero(x); p=0, l=0, w=one(x), k=one(x), N=normalization_lg(p, l, w))
+    γ = w / oftype(float(w), √2)
     X = x / γ
     Y = y / γ
     r2 = X^2 + Y^2
     L = abs(l)
-    α = get_α(z, γ, k)
+    α = get_α(z, w, k)
 
     N * α * exp(-α * r2 / 2 + im * (2p + abs(l)) * angle(α)) * (abs(α) * (X + im * sign(l) * Y))^L * laguerre(abs2(α) * r2, p, L)
 end
 
-@kernel function lg_kernel!(dest, x, y, z, p, l, γ, k, N)
+@kernel function lg_kernel!(dest, x, y, z, p, l, w, k, N)
     r, s, t = @index(Global, NTuple)
-    dest[r, s, t] = lg(x[r], y[s], z[t]; p, l, γ, k, N)
+    dest[r, s, t] = lg(x[r], y[s], z[t]; p, l, w, k, N)
 end
 
-function lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, γ))
+function lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w))
     backend = get_backend(dest)
     kernel! = lg_kernel!(backend)
     ndrange = (length(x), length(y), length(z))
     dest_3d = reshape(dest, ndrange...)
-    kernel!(dest_3d, x, y, z, p, l, γ, k, N; ndrange)
+    kernel!(dest_3d, x, y, z, p, l, w, k, N; ndrange)
 end
 
-function lg(x, y, z=zero(eltype(x)); p=0, l=0, γ=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, γ))
-    T = complex_type(x, y, z, p, l, γ, k, N)
+function lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w))
+    T = complex_type(x, y, z, p, l, w, k, N)
     dest = similar(x, T, get_size(x, y, z)...)
-    lg!(dest, x, y, z; p, l, γ, k, N)
+    lg!(dest, x, y, z; p, l, w, k, N)
     dest
 end
 
