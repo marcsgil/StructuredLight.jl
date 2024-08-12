@@ -311,38 +311,3 @@ function generate_hologram(desired, incoming, x, y, max_modulation, x_period, y_
     generate_hologram!(dest, desired, incoming, x, y, max_modulation, x_period, y_period, method)
     dest
 end
-
-"""function convert2angle(x)
-    return mod.(x .+ π, 2π) .- π
-end
-
-function normalize(holo, max_modulation)
-    m = minimum(holo)
-    M = maximum(holo)
-    return round.(UInt8, max_modulation .* (holo .- m) ./ (M - m))
-end
-
-function psi(phi, a, ::Type{Simple})
-    return a .* convert2angle(phi)
-end
-
-function psi(phi, a, ::Type{BesselJ1})
-    inverse_besselj1.(a * 0.5818) .* sin.(phi)
-end
-
-function generate_hologram(desired, incoming, x, y, max_modulation::Int, xperiod, yperiod, ::Type{T}=BesselJ1) where {T<:HologramMethod}
-    relative = desired ./ incoming
-
-    a = abs.(relative)
-    a ./= maximum(a)
-
-    lx = xperiod * (x[2] - x[1])
-    ly = yperiod * (y[2] - y[1])
-    phi = angle.(relative) .+ 2π .* (x ./ lx .+ y' ./ ly)
-
-    if T == BesselJ1
-        max_modulation *= 0.586
-    end
-
-    return normalize(psi(phi, a, T), round(max_modulation))
-end"""
