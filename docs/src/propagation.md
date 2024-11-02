@@ -46,15 +46,15 @@ save_animation(abs2.(ψs), "lg_times_sin.mp4")
 ```@example
 using StructuredLight, CairoMakie
 
-rs = LinRange(-4,4,256)
-zs = LinRange(.01,1,32)
+rs = LinRange(-4, 4, 256)
+zs = LinRange(0.01, 1, 32)
 
 #This is a gaussian mode
-ψ₀ = lg(rs,rs)
-scalings = @. √(1+zs^2) #Here, we introduce the scalings given by w(z)/w0
+ψ₀ = lg(rs, rs)
+scalings = @. √(1 + 4 * zs^2) #Here, we introduce the scalings given by w(z)/w0
 
 #Now we propagate, including the scalings
-ψs = free_propagation(ψ₀,rs,rs,zs,scalings)
+ψs = free_propagation(ψ₀, rs, rs, zs, scalings)
 
 #Note that the scalings compensate the diffraction of the beam.
 #Therefore, the animation seems still.

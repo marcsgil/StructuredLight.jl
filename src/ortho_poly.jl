@@ -79,7 +79,7 @@ end
 
     Evaluate the `n` th Zernike polynomial at `(x, y)` with azimuthal order `m`.
 """
-function zernike_polynomial(x, y, m, n)
+function zernike_polynomial(x::Number, y::Number, m, n)
     ρ = sqrt(x^2 + y^2)
     θ = atan(y, x)
 

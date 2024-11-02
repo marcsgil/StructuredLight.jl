@@ -13,7 +13,7 @@ w = √((2 + √2) * f / k)
 rs = LinRange(-4w, 4w, 512)
 zs = LinRange(0, 2d, 64)
 ##
-ψ₀ = lg(rs, rs, -d; γ = w / √2, k, l=1, p=0)
+ψ₀ = lg(rs, rs, -d; w, k, l=1, p=0)
 lens!(ψ₀, rs, rs, Inf, f; k) #Applies a cylindrical lens
 ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
 ψs = free_propagation(ψ₀, rs, rs, zs; k)
@@ -31,7 +31,6 @@ using StructuredLight, CairoMakie
 #All quantities have unit of (inverse) meter
 
 w = 0.16e-3 #Waist
-γ = w / sqrt(2)
 λ = 632.8e-9 #Wavelength
 k = 2π/λ #Wavenumber
 f = 50e-2 #Focal length of the lens
@@ -44,7 +43,7 @@ z_cr = z₀/(z₀/f-1) #Conversion distance
 
 # Now, we set up our grid and the initial profile by including the action of a tilted lens:
 rs = LinRange(-70w,70w,1024)
-ψ₀ = lg(rs,rs,z₀,l=3; γ, k)
+ψ₀ = lg(rs,rs,z₀,l=3; w, k)
 tilted_lens!(ψ₀,rs,rs,f,ξ;k) #Applies the lens
 
 # Finally, we propagate. 

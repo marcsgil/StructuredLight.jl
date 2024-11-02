@@ -14,6 +14,23 @@ function aberration_correction!(dest, x, y, scale, idxs, coeffs)
 end
 # End TODO
 
+@kernel function zernike_kernel!(dest, x, y, m, n)
+    i, j = @index(Global, NTuple)
+    dest[i, j] = zernike_polynomial(x[i], y[j], m, n)
+end
+
+function zernike_polynomial!(dest, x, y, m, n)
+    backend = get_backend(dest)
+    kernel! = zernike_kernel!(backend)
+    kernel!(dest, x, y, m, n; ndrange=size(dest))
+end
+
+function zernike_polynomial(x, y, m, n)
+    dest = similar(x, promote_type(eltype(x), eltype(y)), size(x, 1), size(y, 1))
+    zernike_polynomial!(dest, x, y, m, n)
+    dest
+end
+
 @kernel function lens_kernel!(dest, x, y, fx, fy, k)
     i, j = @index(Global, NTuple)
     dest[i, j] *= cis(-k * (x[i]^2 / fx + y[j]^2 / fy) / 2)

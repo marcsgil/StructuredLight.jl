@@ -11,3 +11,5 @@ include("kerr_test.jl")
 include("hologram_tests.jl")
 
 include("normalization_tests.jl")
+
+include("shapes_test.jl")

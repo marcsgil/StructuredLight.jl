@@ -172,6 +172,116 @@ function lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)
     dest
 end
 
+"""
+    rectangular_apperture(x, y, a, b)
+
+Determine if points (x, y) are within a rectangular aperture centered at the origin.
+The rectangle has width `a` and height `b`.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `a`: Width of the rectangle.
+- `b`: Height of the rectangle.
+
+# Returns
+- A boolean array indicating whether each point is within the rectangular aperture.
+"""
+function rectangular_apperture(x, y, a, b)
+    @. abs(x) <= a / 2 && abs(y') <= b / 2
+end
+
+"""
+    square(x, y, l)
+
+Determine if points (x, y) are within a square aperture centered at the origin.
+The square has side length `l`.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `l`: Side length of the square.
+
+# Returns
+- A boolean array indicating whether each point is within the square aperture.
+"""
+function square(x, y, l)
+    rectangular_apperture(x, y, l, l)
+end
+
+"""
+    single_slit(x, y, a)
+
+Determine if points (x, y) are within a single slit aperture centered at the origin.
+The slit has width `a` and extends infinitely in the y-direction.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `a`: Width of the slit.
+
+# Returns
+- A boolean array indicating whether each point is within the single slit aperture.
+"""
+function single_slit(x, y, a)
+    rectangular_apperture(x, y, a, Inf)
+end
+
+"""
+    double_slit(x, y, a, d)
+
+Determine if points (x, y) are within a double slit aperture centered at the origin.
+Each slit has width `a` and they are separated by distance `d`.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `a`: Width of each slit.
+- `d`: Distance between the centers of the slits.
+
+# Returns
+- A boolean array indicating whether each point is within the double slit aperture.
+"""
+function double_slit(x, y, a, d)
+    @. (abs(x - d / 2) <= a / 2 && abs(y') <= Inf) || (abs(x + d / 2) <= a / 2 && abs(y') <= Inf)
+end
+
+"""
+    pupil(x, y, r)
+
+Determine if points (x, y) are within a circular aperture centered at the origin.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `r`: Radius of the circle.
+
+# Returns
+- A boolean array indicating whether each point is within the circular aperture.
+"""
+function pupil(x, y, r)
+    @. x^2 + y'^2 <= r^2
+end
+
+"""
+    triangle(x, y, side_length)
+
+Determine if points (x, y) are within an equilateral triangle aperture centered at the origin.
+The triangle has side length `side_length`.
+
+# Arguments
+- `x`: x-coordinates of the points.
+- `y`: y-coordinates of the points.
+- `side_length`: Side length of the triangle.
+
+# Returns
+- A boolean array indicating whether each point is within the triangular aperture.
+"""
+function triangle(x, y, side_length)
+    sqrt3 = √3
+    @. y' > -side_length / 2 / sqrt3 && abs(x) < -y' / sqrt3 + side_length / 3
+end
+
 """linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
     c * f(args...; kwargs...)
 end |> sum
