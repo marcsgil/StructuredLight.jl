@@ -250,28 +250,27 @@ end
 end
 
 """
-    generate_hologram!(dest, desired, incoming, x, y, max_modulation, 
+    generate_hologram!(dest, desired, incoming, two_pi_modulation, 
         x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
 
 Same as [`generate_hologram`](@ref), but writes the result to `dest`.
 """
-function generate_hologram!(dest, desired, incoming, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
+function generate_hologram!(dest, desired, incoming, two_pi_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
     M = max_abs_div(desired, incoming, length(desired) ÷ (2 * Threads.nthreads()))
 
     backend = get_backend(dest)
     kernel! = hologram_kernel!(backend)
-    kernel!(dest, desired, incoming, max_modulation, M, x_period, y_period, method; ndrange=size(dest))
+    kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, method; ndrange=size(dest))
 end
 
 
 """
-    generate_hologram(desired, incoming, x, y, max_modulation, 
+    generate_hologram(desired, incoming, two_pi_modulation, 
         x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
 
 Returns a hologram built from the desired and incoming images, using the specified `method`.
 
-`x` and `y` are the spatial coordinates of the images
-`max_modulation` is the maximum value of the hologram (should be an integer between 0 and 255). 
+`two_pi_modulation` is the maximum value of the hologram (should be an integer between 0 and 255). 
 `x_period` and `y_period` are the periods, in units of pixels, of the hologram in the x and y directions.
 The avaliable methods are [`BesselJ1`](@ref) and [`Simple`](@ref).
 
@@ -303,8 +302,8 @@ J. Opt. Soc. Am. A 24, 3500-3507 (2007)
 Opt. Express 24, 6249-6264 (2016)
 """
 
-function generate_hologram(desired, incoming, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
+function generate_hologram(desired, incoming, two_pi_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
     dest = similar(desired, UInt8)
-    generate_hologram!(dest, desired, incoming, max_modulation, x_period, y_period, method)
+    generate_hologram!(dest, desired, incoming, two_pi_modulation, x_period, y_period, method)
     dest
 end
