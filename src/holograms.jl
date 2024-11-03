@@ -229,22 +229,22 @@ const ys_besselj1 = inverse.(x -> besselj1(x), xs_besselj1, y_min_besselj1, y_ma
 
 inverse_besselj1(x) = zero_order_interpolation(x, xs_besselj1, ys_besselj1)
 
-@kernel function hologram_kernel!(dest, desired, incoming, x, y, two_pi_modulation, M, kx, ky, ::Type{BesselJ1})
+@kernel function hologram_kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, ::Type{BesselJ1})
     i, j = @index(Global, NTuple)
 
     relative = desired[i, j] / incoming[i, j] / M
     ψ = (inverse_besselj1(x_max_besselj1 * abs(relative))
          *
-         sin((kx * x[i] + ky * y[j]) + angle(relative)))
+         sin(2π * (i / x_period + j / y_period) + angle(relative)))
 
     dest[i, j] = round(two_pi_modulation * 0.586 * (ψ / y_max_besselj1 + 1) / 2)
 end
 
-@kernel function hologram_kernel!(dest, desired, incoming, x, y, two_pi_modulation, M, kx, ky, ::Type{Simple})
+@kernel function hologram_kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, ::Type{Simple})
     i, j = @index(Global, NTuple)
 
     relative = desired[i, j] / incoming[i, j] / M
-    ψ = abs(relative) * normalize_angle(angle(relative) + kx * x[i] + ky * y[j])
+    ψ = abs(relative) * normalize_angle(angle(relative) + 2π * (i / x_period + j / y_period))
 
     dest[i, j] = round(two_pi_modulation * (ψ + π) / 2π)
 end
@@ -255,15 +255,12 @@ end
 
 Same as [`generate_hologram`](@ref), but writes the result to `dest`.
 """
-function generate_hologram!(dest, desired, incoming, x, y, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
+function generate_hologram!(dest, desired, incoming, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
     M = max_abs_div(desired, incoming, length(desired) ÷ (2 * Threads.nthreads()))
-
-    kx = 2π / interval(x) / x_period
-    ky = 2π / interval(y) / y_period
 
     backend = get_backend(dest)
     kernel! = hologram_kernel!(backend)
-    kernel!(dest, desired, incoming, x, y, max_modulation, M, kx, ky, method; ndrange=size(dest))
+    kernel!(dest, desired, incoming, max_modulation, M, x_period, y_period, method; ndrange=size(dest))
 end
 
 
