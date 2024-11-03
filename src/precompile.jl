@@ -16,8 +16,8 @@ using PrecompileTools
 
             input = hg(rs, rs; w=10)
 
-            holo = generate_hologram(desired, input, rs, rs, 255, 50, -50, Simple)
-            holo = generate_hologram(desired, input, rs, rs, 255, 50, -50, BesselJ1)
+            holo = generate_hologram(desired, input, 255, 50, -50, Simple)
+            holo = generate_hologram(desired, input, 255, 50, -50, BesselJ1)
         end
     end
 

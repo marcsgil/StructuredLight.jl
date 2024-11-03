@@ -303,8 +303,8 @@ J. Opt. Soc. Am. A 24, 3500-3507 (2007)
 Opt. Express 24, 6249-6264 (2016)
 """
 
-function generate_hologram(desired, incoming, x, y, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
+function generate_hologram(desired, incoming, max_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
     dest = similar(desired, UInt8)
-    generate_hologram!(dest, desired, incoming, x, y, max_modulation, x_period, y_period, method)
+    generate_hologram!(dest, desired, incoming, max_modulation, x_period, y_period, method)
     dest
 end
