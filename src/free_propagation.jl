@@ -34,6 +34,9 @@ end
     ψ[i, j, l] *= cis(k * (x[i]^2 + y[j]^2) * (scaling[l] - 1) * scaling[l] / 2z[l])
 end
 
+three_d_size(x::AbstractMatrix) = (size(x)..., 1)
+three_d_size(x::AbstractArray{T,3}) where {T} = size(x)
+
 
 """
     free_propagation(ψ, x, y, z [, scaling]; k=1)
@@ -72,21 +75,19 @@ true
 ```
 """
 function free_propagation(ψ, x, y, z; k=1)
-    qx = to_device(ψ, reciprocal_grid(x, shift=true))
-    qy = to_device(ψ, reciprocal_grid(y, shift=true))
+    qx = fftfreq(length(x), 2π / step(x))
+    qy = fftfreq(length(y), 2π / step(y))
+    result = stack(ψ for _ in z)
 
-    shifted_ψ = get_shifted_ψ(ψ, x, y, z)
-    shifted_ψ_3d = reshape(shifted_ψ, length(x), length(y), length(z))
-
-    backend = get_backend(shifted_ψ_3d)
+    backend = get_backend(result)
     _fresnel_kernel! = fresnel_kernel!(backend)
-    ndrange = size(shifted_ψ_3d)
+    ndrange = three_d_size(result)
 
-    fft!(shifted_ψ_3d, (1, 2))
-    _fresnel_kernel!(shifted_ψ_3d, qx, qy, z, k; ndrange)
-    ifft!(shifted_ψ_3d, (1, 2))
+    fft!(result, (1, 2))
+    _fresnel_kernel!(result, qx, qy, z, k; ndrange)
+    ifft!(result, (1, 2))
 
-    fftshift(shifted_ψ, (1, 2))
+    result
 end
 
 function free_propagation(ψ, x, y, z, scaling; k=1)
@@ -96,8 +97,8 @@ function free_propagation(ψ, x, y, z, scaling; k=1)
     _x = to_device(ψ, ifftshift(x))
     _y = to_device(ψ, ifftshift(y))
     _z = to_device(ψ, z)
-    qx = to_device(ψ, reciprocal_grid(x, shift=true))
-    qy = to_device(ψ, reciprocal_grid(y, shift=true))
+    qx = fftfreq(length(x), 2π / step(x))
+    qy = fftfreq(length(y), 2π / step(y))
 
     shifted_ψ = get_shifted_ψ(ψ, x, y, z)
 

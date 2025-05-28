@@ -8,9 +8,6 @@ function visualize end
 function save_animation end
 export visualize, save_animation
 
-include("dft_utils.jl")
-export direct_grid, reciprocal_grid
-
 include("misc.jl")
 export overlap
 

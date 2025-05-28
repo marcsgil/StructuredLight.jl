@@ -80,9 +80,9 @@ function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
     iplan = plan_ifft!(ψ₀)
 
     ψ = ifftshift(ψ₀)
-
-    qxs = to_device(ψ₀, reciprocal_grid(xs, shift=true))
-    qys = to_device(ψ₀, reciprocal_grid(ys, shift=true))
+    
+    qxs = fftfreq(length(xs), 2π / step(xs))
+    qys = fftfreq(length(ys), 2π / step(ys))
 
     quadratic_qs = @. -(qxs^2 + qys'^2) / 2k
     phases = similar(ψ₀)
