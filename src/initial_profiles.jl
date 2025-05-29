@@ -78,12 +78,21 @@ function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(
     kernel!(dest_3d, x, y, z, θ, m, n, w, k, N; ndrange)
 end
 
-function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
+function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), array_constructor::Type{AC}=Array) where {AC<:AbstractArray}
+    T = complex_type(x, y, z, θ, m, n, w, k, N)
+    dims = get_size(x, y, z)
+    N = length(dims)
+    dest = AC{T,N}(undef, dims...)
+    hg!(dest, x, y, z; θ, m, n, w, k, N)
+    dest
+end
+
+#= function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
     T = complex_type(x, y, z, θ, m, n, w, k, N)
     dest = similar(x, T, get_size(x, y, z)...)
     hg!(dest, x, y, z; θ, m, n, w, k, N)
     dest
-end
+end =#
 
 diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg!(dest, x, y, z; θ=π / 4, m, n, w, k, N)
 

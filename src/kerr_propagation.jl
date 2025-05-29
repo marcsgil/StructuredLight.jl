@@ -2,7 +2,7 @@ function distribute(N, v)
     Δ = v[end] - v[1]
     @assert Δ > 0 "The total interval is null"
 
-    δs = [v[i] - v[i-1] for i in 2:length(v)]
+    δs = diff(v)
     for δ in δs
         @assert δ ≥ 0 "The vector `v` must be in crescent order"
     end
@@ -80,7 +80,7 @@ function kerr_propagation(ψ₀, xs, ys, zs, total_steps; k=1, g=1)
     iplan = plan_ifft!(ψ₀)
 
     ψ = ifftshift(ψ₀)
-    
+
     qxs = fftfreq(length(xs), 2π / step(xs))
     qys = fftfreq(length(ys), 2π / step(ys))
 
