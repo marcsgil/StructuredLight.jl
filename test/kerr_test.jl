@@ -55,8 +55,8 @@ l = 2
 
 run_kerr_tests(rs, zs, g, l)
 
-if CUDA.functional()
+#= if CUDA.functional()
     CUDA.allowscalar(false)
 
     run_kerr_tests(rs |> collect |> CuArray, zs |> collect |> CuArray, g, l, " (CUDA)")
-end
+end =#

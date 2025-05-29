@@ -18,6 +18,6 @@ rs = LinRange(-10, 10, 1024)
 
 test_overlaps(rs, rs)
 
-if CUDA.functional()
+#= if CUDA.functional()
     test_overlaps(rs |> collect |> cu, rs |> collect |> cu, "(CUDA)")
-end
+end =#

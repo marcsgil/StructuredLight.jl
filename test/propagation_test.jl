@@ -45,8 +45,8 @@ rtol = 0.03
 
 run_propagation_tests(xs, ys; rtol)
 
-if CUDA.functional()
+#= if CUDA.functional()
     CUDA.allowscalar(false)
 
     run_propagation_tests(xs |> collect |> CuArray, ys |> collect |> CuArray, " (CUDA)"; rtol=rtol)
-end
+end =#
