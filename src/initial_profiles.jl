@@ -16,13 +16,15 @@ function normalization_hg(m, n, w::T) where {T}
 end
 
 """
-    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)))
+    hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU())
 
 Compute a Hermite-Gaussian mode.
 
 `x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
 
 # Other Arguments:
+
+- `θ`: rotation of the mode in the xy-plane, in radians. Default is 0.
 
 - `m`: x index
 
@@ -31,6 +33,10 @@ Compute a Hermite-Gaussian mode.
 - `w`: beam's waist
 
 - `k`: wavenumber
+
+- `N`: normalization constant. The default value computed by [`normalization_hg`](@ref) ensures that the integral of the absolute square of mode is equal to 1.
+
+- `backend`: backend to use for the computation, as defined in `KernelAbstractions`. Default is `CPU()`. You can use e.g., `CUDABackend()`, `MetalBackend()`, `ROCBackend()` or `oneAPIBackend()` for GPU computations.
 
 # Examples
 
@@ -78,32 +84,24 @@ function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(
     kernel!(dest_3d, x, y, z, θ, m, n, w, k, N; ndrange)
 end
 
-function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), array_constructor::Type{AC}=Array) where {AC<:AbstractArray}
+function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU())
     T = complex_type(x, y, z, θ, m, n, w, k, N)
     dims = get_size(x, y, z)
-    N = length(dims)
-    dest = AC{T,N}(undef, dims...)
+    dest = allocate(backend, T, dims...)
     hg!(dest, x, y, z; θ, m, n, w, k, N)
     dest
 end
 
-#= function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
-    T = complex_type(x, y, z, θ, m, n, w, k, N)
-    dest = similar(x, T, get_size(x, y, z)...)
-    hg!(dest, x, y, z; θ, m, n, w, k, N)
-    dest
-end =#
-
 diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg!(dest, x, y, z; θ=π / 4, m, n, w, k, N)
 
 """
-    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)))
+    diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU())
 
 Compute a diagonal Hermite-Gaussian mode. It is calculated by setting `θ=π/4` in [`hg`](@ref).
 
 See also [`lg`](@ref).
 """
-diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg(x, y, z; θ=π / 4, m, n, w, k, N)
+diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU()) = hg(x, y, z; θ=π / 4, m, n, w, k, N, backend)
 
 """
     normalization_lg(p,l,w=1)
@@ -115,7 +113,7 @@ function normalization_lg(p, l, w::T) where {T}
 end
 
 """
-    lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)))
+    lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w), backend=CPU())
 
 Compute a diagonal Hermite-Gaussian mode.
 
@@ -130,6 +128,10 @@ Compute a diagonal Hermite-Gaussian mode.
 - `w`: beam's waist
 
 - `k`: wavenumber
+
+- `N`: normalization constant. The default value computed by [`normalization_lg`](@ref) ensures that the integral of the absolute square of mode is equal to 1.
+
+- `backend`: backend to use for the computation, as defined in `KernelAbstractions`. Default is `CPU()`. You can use e.g., `CUDABackend()`, `MetalBackend()`, `ROCBackend()` or `oneAPIBackend()` for GPU computations.
 
 # Examples
 
@@ -178,9 +180,9 @@ function lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(el
     kernel!(dest_3d, x, y, z, p, l, w, k, N; ndrange)
 end
 
-function lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w))
+function lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w), backend=CPU())
     T = complex_type(x, y, z, p, l, w, k, N)
-    dest = similar(x, T, get_size(x, y, z)...)
+    dest = allocate(backend, T, get_size(x, y, z)...)
     lg!(dest, x, y, z; p, l, w, k, N)
     dest
 end

@@ -1,7 +1,7 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
-version = "0.6"
+version = "0.7.0"
 
 [deps]
 Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
@@ -11,21 +11,19 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 
 [weakdeps]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [extensions]
-StructuredLightCUDAExt = "CUDA"
 StructuredLightMakieExt = "Makie"
 
 [compat]
 Bessels = "0.2"
 CUDA = "5"
 FFTW = "1"
-KernelAbstractions = "0.8,0.9"
+KernelAbstractions = "0.8 - 0.9"
 Makie = "0.21"
 PrecompileTools = "1"
-julia = "1.10"
+julia = "1.10 - 1.12"
 
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
