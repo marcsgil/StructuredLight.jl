@@ -1,5 +1,9 @@
 complex_type(args...) = promote_type((eltype(arg) for arg ∈ args)...) |> complex
 
+get_size(::Number) = ()
+get_size(x) = (length(x),)
+get_size(x, args...) = (get_size(x)..., get_size(args...)...)
+
 get_α(z, w, k) = inv(1 + im * 2z / (k * w^2))
 
 """

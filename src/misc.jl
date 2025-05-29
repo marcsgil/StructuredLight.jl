@@ -19,9 +19,3 @@ The output is a vector.
 function overlap(ψ₁::AbstractArray{T1,3}, ψ₂::AbstractArray{T2,3}, xs, ys) where {T1,T2}
     map((a, b) -> overlap(a, b, xs, ys), eachslice(ψ₁, dims=3), eachslice(ψ₂, dims=3))
 end
-
-get_size(::Number) = ()
-get_size(x) = (length(x))
-get_size(x, args...) = (get_size(x)..., get_size(args...)...)
-
-to_device(::Any, y) = y

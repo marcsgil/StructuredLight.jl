@@ -1,17 +1,3 @@
-function get_shifted_ψ(ψ, x, y, z)
-    shifted_ψ = similar(ψ, complex(eltype(ψ)), get_size(x, y, z)...)
-    for slice ∈ eachslice(shifted_ψ, dims=3)
-        fftshift!(slice, ψ, (1, 2))
-    end
-    shifted_ψ
-end
-
-function get_shifted_ψ(ψ, x, y, z::Number)
-    shifted_ψ = similar(ψ, complex(eltype(ψ)), get_size(x, y, z)...)
-    fftshift!(shifted_ψ, ψ)
-    shifted_ψ
-end
-
 #Without scaling
 @kernel function fresnel_kernel!(ψ, x, y, z, k)
     i, j, l = @index(Global, NTuple)
@@ -94,27 +80,27 @@ function free_propagation(ψ, x, y, z, scaling; k=1)
     @assert length(z) == length(scaling) "`z` and `scaling` should have the same length"
     @assert 0 ∉ z "This method does not support `z` containing `0`"
 
-    _x = to_device(ψ, ifftshift(x))
-    _y = to_device(ψ, ifftshift(y))
-    _z = to_device(ψ, z)
-    qx = fftfreq(length(x), 2π / step(x))
-    qy = fftfreq(length(y), 2π / step(y))
+    Δx = step(x)
+    Δy = step(y)
+    Nx = length(x)
+    Ny = length(y)
+    _x = StepRangeLen(first(x), Δx, Nx)
+    _y = StepRangeLen(first(y), Δy, Ny)
+    qx = fftfreq(Nx, 2π / Δx)
+    qy = fftfreq(Ny, 2π / Δy)
 
-    shifted_ψ = get_shifted_ψ(ψ, x, y, z)
-
-    shifted_ψ_3d = reshape(shifted_ψ, length(x), length(y), length(z))
-
-    backend = get_backend(shifted_ψ_3d)
+    result = stack(ψ for _ in z)
+    backend = get_backend(result)
     _fresnel_kernel! = fresnel_kernel!(backend)
     _pre_kernel! = pre_kernel!(backend)
     _post_kernel! = post_kernel!(backend)
-    ndrange = size(shifted_ψ_3d)
+    ndrange = three_d_size(result)
 
-    _pre_kernel!(shifted_ψ_3d, _x, _y, _z, k, scaling; ndrange)
-    fft!(shifted_ψ_3d, (1, 2))
-    _fresnel_kernel!(shifted_ψ_3d, qx, qy, z ./ scaling, k; ndrange)
-    ifft!(shifted_ψ_3d, (1, 2))
-    _post_kernel!(shifted_ψ_3d, _x, _y, _z, k, scaling; ndrange)
+    _pre_kernel!(result, _x, _y, z, k, scaling; ndrange)
+    fft!(result, (1, 2))
+    _fresnel_kernel!(result, qx, qy, z ./ scaling, k; ndrange)
+    ifft!(result, (1, 2))
+    _post_kernel!(result, _x, _y, z, k, scaling; ndrange)
 
-    fftshift(shifted_ψ, (1, 2))
+    result
 end
