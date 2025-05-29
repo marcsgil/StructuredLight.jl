@@ -1,35 +1,45 @@
 module StructuredLight
 
-using FFTW, LinearAlgebra, KernelAbstractions, Bessels
+using FFTW, LinearAlgebra, KernelAbstractions, Bessels, DispatchDoctor
 
-FFTW.set_num_threads(8)
+using DispatchDoctor
+@stable default_mode = "disable" begin
 
-function visualize end
-function save_animation end
-export visualize, save_animation
+    function relu(x)
+        if x > 0
+            return x
+        else
+            return 0.0
+        end
+    end
 
-include("misc.jl")
-export overlap
+    function visualize end
+    function save_animation end
+    export visualize, save_animation
 
-include("ortho_poly.jl")
-export laguerre, hermite
+    include("misc.jl")
+    export overlap
 
-include("initial_profiles.jl")
-export hg!, hg, diagonal_hg, diagonal_hg!, lg!, lg,
-    rectangular_apperture, square, single_slit, double_slit, pupil, triangle
+    include("ortho_poly.jl")
+    export laguerre, hermite
 
-include("free_propagation.jl")
-export free_propagation
+    include("initial_profiles.jl")
+    export hg!, hg, diagonal_hg, diagonal_hg!, lg!, lg,
+        rectangular_apperture, square, single_slit, double_slit, pupil, triangle
 
-include("kerr_propagation.jl")
-export kerr_propagation
+    include("free_propagation.jl")
+    export free_propagation
 
-include("holograms.jl")
-export BesselJ1, Simple, generate_hologram, generate_hologram!
+    include("kerr_propagation.jl")
+    export kerr_propagation
 
-include("aberration_correction.jl")
-export lens!, lens, tilted_lens!, tilted_lens, zernike_polynomial!, zernike_polynomial
+    include("holograms.jl")
+    export BesselJ1, Simple, generate_hologram, generate_hologram!
 
-include("precompile.jl")
+    include("aberration_correction.jl")
+    export lens!, lens, tilted_lens!, tilted_lens, zernike_polynomial!, zernike_polynomial
 
+    include("precompile.jl")
+
+end
 end

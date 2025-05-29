@@ -5,6 +5,7 @@ version = "0.7.0"
 
 [deps]
 Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
+DispatchDoctor = "8d63f2c5-f18a-4cf2-ba9d-b3f60fc568c8"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -19,6 +20,7 @@ StructuredLightMakieExt = "Makie"
 [compat]
 Bessels = "0.2"
 CUDA = "5"
+DispatchDoctor = "0.4.19"
 FFTW = "1"
 KernelAbstractions = "0.8 - 0.9"
 Makie = "0.21"
@@ -28,7 +30,8 @@ julia = "1.10 - 1.12"
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "CUDA", "Documenter"]
+test = ["Test", "CUDA", "Documenter", "Preferences"]

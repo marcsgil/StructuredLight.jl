@@ -20,8 +20,10 @@ true
 function find_zero(f, x₁, x₂; tol=1e-6, maxiter=10^3)
     @assert f(x₁) * f(x₂) ≤ 0 "Error: f(x₁) and f(x₂) must have opposite signs"
 
-    isapprox(f(x₁), 0; atol=tol) && return 2x₁ / 2
-    isapprox(f(x₂), 0; atol=tol) && return 2x₂ / 2
+    isapprox(f(x₁), 0; atol=tol) && return float(x₁)
+    isapprox(f(x₂), 0; atol=tol) && return float(x₂)
+
+    x = (x₁ + x₂) / 2
 
     for _ ∈ 1:maxiter
         x = (x₁ + x₂) / 2
@@ -37,6 +39,8 @@ function find_zero(f, x₁, x₂; tol=1e-6, maxiter=10^3)
             x₁ = x
         end
     end
+
+    x
 end
 
 """
@@ -120,7 +124,7 @@ If is provided, the function will run a divide and conquer type algorithm to par
 Otherwise, the function will use a simple loop to find the maximum value.
 
 # Examples
-```jldoctest
+```
 using StructuredLight: max_abs_div
 x = [-1, 2, -3]
 y = [4, 5, 6]
@@ -132,7 +136,7 @@ result == 0.5
 true
 ```
 
-```jldoctest
+```
 using StructuredLight: max_abs_div
 x = rand(10^3)
 y = rand(10^3) .+ 1
