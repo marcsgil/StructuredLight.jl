@@ -8,6 +8,7 @@ In all cases, one must specify the points or the grids over which the mode is ca
 
 ```@docs
 lg
+normalization_lg
 ```
 
 ### Examples
@@ -49,6 +50,7 @@ return nothing # hide
 
 ```@docs
 hg
+normalization_hg
 ```
 
 ### Examples
