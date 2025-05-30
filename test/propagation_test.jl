@@ -49,4 +49,16 @@ if CUDA.functional()
     CUDA.allowscalar(false)
 
     run_propagation_tests(xs, ys, " (CUDA)"; rtol=rtol, backend=CUDABackend())
+
+    @testset "Linear Combination (CUDA)" begin
+        rs = LinRange(-3, 3, 100)
+        grid = (rs, rs)
+        f1(args) = hg(args..., m=1)
+        f2(args) = hg(args..., n=1)
+
+        funcs = (f1, f2)
+        coeffs = (1 / √2, -im / √2)
+
+        @test Array(grid_linear_combination(funcs, coeffs, grid, backend=CUDABackend())) ≈ lg(rs, rs, l=-1)
+    end
 end

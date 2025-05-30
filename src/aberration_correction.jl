@@ -1,19 +1,3 @@
-# TODO
-function linear_combination(fs, coeffs)
-    (args...; kwargs...) -> sum(f(args...; kwargs) * c for (f, c) in zip(fs, coeffs))
-end
-
-@kernel function aberration_correction_kernel!(dest, correction_func, x, y)
-    i, j = @index(Global, NTuple)
-    dest[i, j] *= cis(correction_func(x[i], y[j]))
-end
-
-function aberration_correction!(dest, x, y, scale, idxs, coeffs)
-    fs = ((x, y) -> zernike_polynomial(x / scale, y / scale, idxs...) for idx ∈ idxs)
-    correction_func = linear_combination(fs, coeffs)
-end
-# End TODO
-
 @kernel function zernike_kernel!(dest, x, y, m, n)
     i, j = @index(Global, NTuple)
     dest[i, j] = zernike_polynomial(x[i], y[j], m, n)

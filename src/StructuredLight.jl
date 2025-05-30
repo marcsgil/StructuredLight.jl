@@ -16,7 +16,8 @@ using DispatchDoctor
 
     include("initial_profiles.jl")
     export hg!, hg, normalization_hg, diagonal_hg, diagonal_hg!, lg!, lg, normalization_lg,
-        rectangular_apperture, square, single_slit, double_slit, pupil, triangle
+        rectangular_apperture, square, single_slit, double_slit, pupil, triangle,
+        linear_combination, grid_linear_combination!, grid_linear_combination
 
     include("free_propagation.jl")
     export free_propagation

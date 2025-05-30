@@ -297,34 +297,79 @@ function triangle(x, y, side_length)
     @. y' > -side_length / 2 / sqrt3 && abs(x) < -y' / sqrt3 + side_length / 3
 end
 
-"""linear_combination(f, c) = (args...; kwargs...) -> map(c, f) do c, f
-    c * f(args...; kwargs...)
-end |> sum
+"""
+    linear_combination(funcs, coeffs, arg)
 
-function get_paralelized_function_2D(f)
-    @kernel function kernel_2D!(dest, x, y)
-        i, j = @index(Global, NTuple)
-        dest[i, j] = f(x[i], y[j])
-    end
+Compute a linear combination of functions `funcs` with coefficients `coeffs` evaluated at `arg`.
 
-    function f!(dest, x, y)
-        backend = get_backend(dest)
-        kernel! = kernel_2D!(backend)
-        kernel!(dest, x, y; ndrange=size(dest))
-    end
+```jldoctest
 
-    function f_parallel(x, y)
-        T = complex_type(x, y)
-        dest = similar(x, T, size(x, 1), size(y, 1))
-        f!(dest, x, y)
-        dest
-    end
+f(x) = x^2
+g(x) = x
 
-    f_parallel, f!
+funcs = (f, g)
+coeffs = (1, 2)
+
+linear_combination(funcs, coeffs, 2) == 1 * f(2) + 2 * g(2)
+
+# output
+
+true
+```
+"""
+function linear_combination(funcs, coeffs, args)
+    map(coeffs, funcs) do c, f
+        c * f(args)
+    end |> sum
 end
 
-function linear_combination_2D!(dest, fs, cs, x, y)
-    f_parallel, f! = get_paralelized_function_2D(linear_combination(fs, cs))
-    f_parallel, f!
+@kernel function grid_linear_combination_kernel!(dest, funcs, coeffs, grid)
+    J = @index(Global, NTuple)
+    dest[J...] = linear_combination(funcs, coeffs, ntuple(j -> grid[j][J[j]], length(grid)))
+end
 
-end"""
+"""
+    grid_linear_combination!(dest, funcs, coeffs, grid)
+
+Same as [`grid_linear_combination`](@ref), but writes the result into `dest` instead of returning it.
+"""
+function grid_linear_combination!(dest, funcs, coeffs, grid)
+    backend = get_backend(dest)
+    kernel! = grid_linear_combination_kernel!(backend)
+    ndrange = size(dest)
+    kernel!(dest, funcs, coeffs, grid; ndrange)
+end
+
+"""
+    grid_linear_combination(funcs, coeffs, grid; backend=CPU())
+
+Compute a linear combination of functions `funcs` with coefficients `coeffs` evaluated in the `grid`.
+
+Each function in `funcs` should accept a `Tuple` of arguments corresponding to the point on the grid where it should be evaluated. 
+
+`grid` should be specified as a `Tuple` of arguments: the number of arguments determines the number of dimensions in the grid, and each argument should be a collections of coordinates along one dimension.
+
+The result is returned as an array of type `eltype` in the specified `backend`.
+
+```jldoctest
+rs = LinRange(-3, 3, 100)
+grid = (rs, rs)
+f1(args) = hg(args..., m=1)
+f2(args) = hg(args..., n=1)
+
+funcs = (f1, f2)
+coeffs = (1 / √2, im / √2)
+
+grid_linear_combination(funcs, coeffs, grid) ≈ lg(rs, rs, l=1)
+
+# output
+
+true
+``` 
+"""
+function grid_linear_combination(funcs, coeffs, grid; backend=CPU())
+    T = first(funcs)(ntuple(m -> first(grid[m]), length(grid))) |> typeof
+    dest = allocate(backend, T, ntuple(n -> length(grid[n]), length(grid)))
+    grid_linear_combination!(dest, funcs, coeffs, grid)
+    dest
+end
