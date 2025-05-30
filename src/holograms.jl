@@ -112,72 +112,6 @@ function zero_order_interpolation(x, xs, ys)
     ys[i]
 end
 
-abs_div(x, y) = abs(x / y)
-
-
-"""
-    max_abs_div(x, y [, base_size])
-
-Finds the maximum absolute value of the division of the elements of `x` and `y`.
-
-If is provided, the function will run a divide and conquer type algorithm to parallelize the computation, using `base_size` as the base case.
-Otherwise, the function will use a simple loop to find the maximum value.
-
-# Examples
-```
-using StructuredLight: max_abs_div
-x = [-1, 2, -3]
-y = [4, 5, 6]
-result = max_abs_div(x, y)
-result == 0.5
-
-# output
-
-true
-```
-
-```
-using StructuredLight: max_abs_div
-x = rand(10^3)
-y = rand(10^3) .+ 1
-result = max_abs_div(x, y, 10^2)
-result ≤ 1
-
-# output
-
-true
-```
-"""
-function max_abs_div(x, y)
-    M = real(zero(eltype(x)))
-
-    for (x, y) ∈ zip(x, y)
-        M = max(M, abs_div(x, y))
-    end
-
-    M
-end
-
-function max_abs_div(x::Union{Array,SubArray}, y::Union{Array,SubArray}, base_size)
-    if length(x) < base_size || length(y) < base_size
-        return max_abs_div(x, y)
-    end
-
-    x₁ = view(x, 1:length(x)÷2)
-    x₂ = view(x, length(x)÷2+1:length(x))
-    y₁ = view(y, 1:length(y)÷2)
-    y₂ = view(y, length(y)÷2+1:length(y))
-
-    M₁ = Threads.@spawn max_abs_div(x₁, y₁, base_size)
-    M₂ = Threads.@spawn max_abs_div(x₂, y₂, base_size)
-
-    max(fetch(M₁), fetch(M₂))
-end
-
-function max_abs_div(x, y, base_size)
-    mapreduce(abs_div, max, x, y)
-end
-
 normalize_angle(angle) = mod2pi(angle + π) - π
 
 abstract type HologramMethod end
@@ -233,22 +167,20 @@ const ys_besselj1 = inverse.(x -> besselj1(x), xs_besselj1, y_min_besselj1, y_ma
 
 inverse_besselj1(x) = zero_order_interpolation(x, xs_besselj1, ys_besselj1)
 
-@kernel function hologram_kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, ::Type{BesselJ1})
+@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::BesselJ1)
     i, j = @index(Global, NTuple)
 
-    relative = desired[i, j] / incoming[i, j] / M
-    ψ = (inverse_besselj1(x_max_besselj1 * abs(relative))
+    ψ = (inverse_besselj1(x_max_besselj1 * abs(relative[i, j] / M))
          *
-         sin(2π * (i / x_period + j / y_period) + angle(relative)))
+         sin(2π * (i / x_period + j / y_period) + angle(relative[i, j])))
 
     dest[i, j] = round(two_pi_modulation * 0.586 * (ψ / y_max_besselj1 + 1) / 2)
 end
 
-@kernel function hologram_kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, ::Type{Simple})
+@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::Simple)
     i, j = @index(Global, NTuple)
 
-    relative = desired[i, j] / incoming[i, j] / M
-    ψ = abs(relative) * normalize_angle(angle(relative) + 2π * (i / x_period + j / y_period))
+    ψ = abs(relative[i, j] / M) * normalize_angle(angle(relative[i, j]) + 2π * (i / x_period + j / y_period))
 
     dest[i, j] = round(two_pi_modulation * (ψ + π) / 2π)
 end
@@ -259,12 +191,11 @@ end
 
 Same as [`generate_hologram`](@ref), but writes the result to `dest`.
 """
-function generate_hologram!(dest, desired, incoming, two_pi_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
-    M = max_abs_div(desired, incoming, length(desired) ÷ (2 * Threads.nthreads()))
-
+function generate_hologram!(dest, relative, two_pi_modulation, x_period, y_period, method::T=BesselJ1()) where {T<:HologramMethod}
+    M = maximum(abs, relative)
     backend = get_backend(dest)
     kernel! = hologram_kernel!(backend)
-    kernel!(dest, desired, incoming, two_pi_modulation, M, x_period, y_period, method; ndrange=size(dest))
+    kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, method; ndrange=size(dest))
 end
 
 
@@ -306,8 +237,8 @@ J. Opt. Soc. Am. A 24, 3500-3507 (2007)
 Opt. Express 24, 6249-6264 (2016)
 """
 
-function generate_hologram(desired, incoming, two_pi_modulation, x_period, y_period, method::Type{T}=BesselJ1) where {T<:HologramMethod}
-    dest = similar(desired, UInt8)
-    generate_hologram!(dest, desired, incoming, two_pi_modulation, x_period, y_period, method)
+function generate_hologram(relative, two_pi_modulation, x_period, y_period, method::T=BesselJ1()) where {T<:HologramMethod}
+    dest = similar(relative, UInt8)
+    generate_hologram!(dest, relative, two_pi_modulation, x_period, y_period, method)
     dest
 end

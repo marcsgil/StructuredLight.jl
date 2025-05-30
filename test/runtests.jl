@@ -8,7 +8,7 @@ DocMeta.setdocmeta!(StructuredLight, :DocTestSetup, :(using StructuredLight); re
 
 doctest(StructuredLight)
 
-#= include("propagation_test.jl")
+include("propagation_test.jl")
 
 include("kerr_test.jl")
 
@@ -16,4 +16,4 @@ include("hologram_tests.jl")
 
 include("normalization_tests.jl")
 
-include("shapes_test.jl") =#
+include("shapes_test.jl")

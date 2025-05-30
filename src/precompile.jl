@@ -6,18 +6,16 @@ using PrecompileTools
 
     @compile_workload begin
         for rs ∈ rs_list
-            desired = lg(rs, rs, l=1, p=1)
+            relative = lg(rs, rs, l=1, p=1)
 
             for z in (1, [1])
-                free_propagation(desired, rs, rs, z)
-                free_propagation(desired, rs, rs, 2, z)
-                kerr_propagation(desired, rs, rs, z, 2)
+                free_propagation(relative, rs, rs, z)
+                free_propagation(relative, rs, rs, 2, z)
+                kerr_propagation(relative, rs, rs, z, 2)
             end
 
-            input = hg(rs, rs; w=10)
-
-            holo = generate_hologram(desired, input, 255, 50, -50, Simple)
-            holo = generate_hologram(desired, input, 255, 50, -50, BesselJ1)
+            holo = generate_hologram(relative, 255, 50, -50, Simple())
+            holo = generate_hologram(relative, 255, 50, -50, BesselJ1())
         end
     end
 
