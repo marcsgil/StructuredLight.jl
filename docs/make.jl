@@ -9,6 +9,7 @@ makedocs(
         "initial_profiles.md",
         "visualization.md",
         "propagation.md",
+        "holograms.md",
         "miscellany.md",
         "examples.md",
     ]
