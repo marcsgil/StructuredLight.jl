@@ -17,3 +17,5 @@ include("hologram_tests.jl")
 include("normalization_tests.jl")
 
 include("shapes_test.jl")
+
+include("aberration_correction_tests.jl")

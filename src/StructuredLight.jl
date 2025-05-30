@@ -29,7 +29,7 @@ using DispatchDoctor
     export BesselJ1, Simple, generate_hologram, generate_hologram!
 
     include("aberration_correction.jl")
-    export lens!, lens, tilted_lens!, tilted_lens, zernike_polynomial!, zernike_polynomial
+    export lens!, lens, tilted_lens!, tilted_lens, zernike_polynomial!, zernike_polynomial, aberration_correction!
 
     include("precompile.jl")
 end

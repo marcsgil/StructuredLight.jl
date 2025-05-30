@@ -61,3 +61,46 @@ To apply the lens at a beam `ψ₀`, just calculate `ψ = ψ₀ .* tilted_lens(x
 function tilted_lens(x, y, f, ϕ; k=1)
     lens(x, y, sec(ϕ) * f, cos(ϕ) * f; k)
 end
+
+@kernel function aberration_correction_kernel!(dest, funcs, coeffs, grid)
+    J = @index(Global, NTuple)
+    dest[J...] *= cis(linear_combination(funcs, coeffs, ntuple(j -> grid[j][J[j]], length(grid))))
+end
+
+"""
+    aberration_correction!(dest, funcs, coeffs, grid)
+
+Apply the aberration correction defined by `funcs` and `coeffs` to the array `dest`.
+
+The correction consists of applying a phase defined by linear combination of functions `funcs` with coefficients `coeffs` to the values at the coordinates defined by `grid`.
+
+`grid` is a tuple of collections, each representing a coordinate axis.
+
+This is used to correct for aberrations in optical systems, where `funcs` can include [`zernike_polynomials`](@ref) or other phase functions.
+
+```jldoctest
+rs = LinRange(-3, 3, 3)
+u = hg(rs, rs)
+
+f1(args) = zernike_polynomial(args..., 1, 1)
+f2(args) = zernike_polynomial(args..., 2, 2)
+
+coeffs = (0.1, 0.2)
+
+aberration_correction!(u, (f1, f2), coeffs, (rs, rs))
+
+u
+
+# output
+
+3×3 Matrix{ComplexF64}:
+   1.1609e-8-3.59109e-9im   6.96526e-6+9.82201e-5im    1.1609e-8-3.59109e-9im
+ -2.23719e-5-9.58916e-5im     0.797885+0.0im         -2.23719e-5-9.58916e-5im
+   1.1609e-8+3.59109e-9im  -4.97106e-5+8.49974e-5im    1.1609e-8+3.59109e-9im
+```
+"""
+function aberration_correction!(dest, funcs, coeffs, grid)
+    backend = get_backend(dest)
+    kernel! = aberration_correction_kernel!(backend)
+    kernel!(dest, funcs, coeffs, grid; ndrange=size(dest))
+end
