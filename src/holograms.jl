@@ -67,39 +67,16 @@ function inverse(f, y, x₁, x₂)
 end
 
 """
-    closest_index(number, grid)
-
-Finds the index of the closest value to `number` in the uniform `grid`.
-
-# Examples
-```jldoctest
-using StructuredLight: closest_index
-grid = [1, 3, 5, 7, 9]
-idx = closest_index(3.2, grid)
-idx == 2
-
-# output
-
-true
-```
-"""
-function closest_index(number, grid)
-    step = grid[2] - grid[1]
-    idx = round(Int, (number - grid[1]) / step) + 1
-    clamp(idx, 1, length(grid))
-end
-
-"""
-    zero_order_interpolation(x, xs, ys)
+    interpolate(x, xs, ys)
 
 Performs zero-order interpolation to find the value in `ys` corresponding to the closest value to `x` in `xs`.
 
 # Examples
 ```jldoctest
-using StructuredLight: zero_order_interpolation
-xs = [1, 2, 3, 4, 5]
+using StructuredLight: interpolate
+xs = 1:5
 ys = [10, 20, 30, 40, 50]
-value = zero_order_interpolation(2.7, xs, ys)
+value = interpolate(2.7, xs, ys)
 value == 30
 
 # output
@@ -107,9 +84,10 @@ value == 30
 true
 ```
 """
-function zero_order_interpolation(x, xs, ys)
-    i = closest_index(x, xs)
-    ys[i]
+function interpolate(x, xs, ys)
+    idx = round(Int, (x - first(xs)) / step(xs)) + 1
+    idx = clamp(idx, firstindex(ys), lastindex(ys))
+    @inbounds ys[idx]
 end
 
 normalize_angle(angle) = mod2pi(angle + π) - π
@@ -121,7 +99,6 @@ abstract type HologramMethod end
 
 A hologram generation method based on the inverse of the BesselJ1 function. 
 Corresponds to method of 3 of [1] and F of [2].
-It is not compatible with GPUs.
 
 See also [`Simple`](@ref).
 
@@ -142,7 +119,6 @@ struct BesselJ1 <: HologramMethod end
 
 A hologram generation with a naive amplitude modulation.
 Method of 3 of [1] and F of [2].
-It is compatible with GPUs.
 
 See also [`BesselJ1`](@ref).
 
@@ -158,26 +134,27 @@ Opt. Express 24, 6249-6264 (2016)
 """
 struct Simple <: HologramMethod end
 
-const x_min_besselj1 = 0
-const x_max_besselj1 = 0.5818
-const y_min_besselj1 = 0
-const y_max_besselj1 = 1.82337
+const x_min_besselj1 = 0f0
+const x_max_besselj1 = 0.5818f0
+const y_min_besselj1 = 0f0
+const y_max_besselj1 = 1.82337f0
 const xs_besselj1 = LinRange(x_min_besselj1, x_max_besselj1, 1024)
-const ys_besselj1 = inverse.(x -> besselj1(x), xs_besselj1, y_min_besselj1, y_max_besselj1)
+const ys_besselj1 = inverse.(besselj1, xs_besselj1, y_min_besselj1, y_max_besselj1)
 
-inverse_besselj1(x) = zero_order_interpolation(x, xs_besselj1, ys_besselj1)
+select_itp(::AbstractArray, ::HologramMethod) = (nothing, nothing)
+select_itp(::AbstractArray, ::BesselJ1) = (xs_besselj1, ys_besselj1)
 
-@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::BesselJ1)
+@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::BesselJ1, xs_itp, ys_itp)
     i, j = @index(Global, NTuple)
 
-    ψ = (inverse_besselj1(x_max_besselj1 * abs(relative[i, j] / M))
+    ψ = (interpolate(x_max_besselj1 * abs(relative[i, j] / M), xs_itp, ys_itp)
          *
          sin(2π * (i / x_period + j / y_period) + angle(relative[i, j])))
 
     dest[i, j] = round(two_pi_modulation * 0.586 * (ψ / y_max_besselj1 + 1) / 2)
 end
 
-@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::Simple)
+@kernel function hologram_kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, ::Simple, xs_itp, ys_itp)
     i, j = @index(Global, NTuple)
 
     ψ = abs(relative[i, j] / M) * normalize_angle(angle(relative[i, j]) + 2π * (i / x_period + j / y_period))
@@ -194,7 +171,7 @@ function generate_hologram!(dest, relative, two_pi_modulation, x_period, y_perio
     M = maximum(abs, relative)
     backend = get_backend(dest)
     kernel! = hologram_kernel!(backend)
-    kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, method; ndrange=size(dest))
+    kernel!(dest, relative, M, two_pi_modulation, x_period, y_period, method, select_itp(dest, method)...; ndrange=size(dest))
 end
 
 
@@ -206,7 +183,7 @@ Returns a hologram built from the `relative` field, using the specified `method`
 # Arguments
 - `relative`: a matrix of complex numbers representing the relative field. This is the division of the field one wishes to produce divided by the field that arrives at the hologram plane.
 
-- `two_pi_modulation`: the value of the modulation level that produces a modulation of 2π. Check the SLM details to see what this value should be.
+- `two_pi_modulation`: the value of the modulation level that produces a modulation of 2π. Check your SLM specifications to see what this value should be.
 
 - `x_period` and `y_period` are the periods, in units of pixels, of the hologram in the x and y directions.
 
