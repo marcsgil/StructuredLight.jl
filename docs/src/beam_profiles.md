@@ -1,4 +1,4 @@
-# Initial Profiles
+# Beam Profiles
 
 This package implements the Laguerre-Gauss modes (`lg`), the Hermite-Gauss modes (`hg`) and its diagonal version (`diagonal_hg`).
 

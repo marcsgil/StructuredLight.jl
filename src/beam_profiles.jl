@@ -6,16 +6,24 @@ get_size(x, args...) = (get_size(x)..., get_size(args...)...)
 
 get_α(z, w, k) = inv(1 + im * 2z / (k * w^2))
 
-"""
+@doc raw"""
     normalization_hg(m,n,w)
 
 Compute the normalization constant for the Hermite-Gaussian modes.
+
+This constant ensures that the integral of the absolute square of the mode is equal to 1.
+
+The formula is given by:
+
+```math
+N_{m,n} = \frac{1}{w}  \left( \pi 2^{m+n-1} m! n! \right)^{-1/2}
+```
 """
 function normalization_hg(m, n, w::T) where {T}
     convert(float(T), √2 * inv(w * √(π * 2^(m + n))) * √(prod(inv, 1:m, init=1) * prod(inv, 1:n, init=1)))
 end
 
-"""
+@doc raw"""
     hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU())
 
 Compute a Hermite-Gaussian mode.
@@ -37,6 +45,14 @@ Compute a Hermite-Gaussian mode.
 - `N`: normalization constant. The default value computed by [`normalization_hg`](@ref) ensures that the integral of the absolute square of mode is equal to 1.
 
 - `backend`: backend to use for the computation, as defined in `KernelAbstractions`. Default is `CPU()`. You can use e.g., `CUDABackend()`, `MetalBackend()`, `ROCBackend()` or `oneAPIBackend()` for GPU computations.
+
+The formula is given by:
+
+```math
+\psi_{m,n}(x,y,z) = N_{m,n} \alpha(z) \exp\left[\frac{\alpha(z)}{2}(X^2 + Y^2) + i(m+n)\arg(\alpha(z))\right] H_m(|\alpha(z)|X) H_n(|\alpha(z)|Y)
+```
+
+where ``X = (x\cos\theta + y\sin\theta)/\gamma``, ``Y = (-x\sin\theta + y\cos\theta)/\gamma``, ``\gamma = w/\sqrt{2}``, and ``\alpha(z) = 1/(1 + i2z/(kw^2))``.
 
 # Examples
 
@@ -103,19 +119,27 @@ See also [`lg`](@ref).
 """
 diagonal_hg(x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w), backend=CPU()) = hg(x, y, z; θ=π / 4, m, n, w, k, N, backend)
 
-"""
+@doc raw"""
     normalization_lg(p,l,w=1)
 
 Compute the normalization constant for the Laguerre-Gaussian modes.
+
+This constant ensures that the integral of the absolute square of the mode is equal to 1.
+
+The formula is given by:
+
+```math
+N_{p,l} = \frac{1}{w} \sqrt{\frac{2p!}{\pi (p+|l|)!}}
+```
 """
 function normalization_lg(p, l, w::T) where {T}
-    convert(float(T), √inv(prod(p+1:p+abs(l)) * π) * √2 / w)
+    convert(float(T), √(2 * prod(inv, p+1:p+abs(l), init=1) / π) / w)
 end
 
-"""
+@doc raw"""
     lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w), backend=CPU())
 
-Compute a diagonal Hermite-Gaussian mode.
+Compute a Laguerre-Gaussian mode.
 
 `x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
 
@@ -132,6 +156,15 @@ Compute a diagonal Hermite-Gaussian mode.
 - `N`: normalization constant. The default value computed by [`normalization_lg`](@ref) ensures that the integral of the absolute square of mode is equal to 1.
 
 - `backend`: backend to use for the computation, as defined in `KernelAbstractions`. Default is `CPU()`. You can use e.g., `CUDABackend()`, `MetalBackend()`, `ROCBackend()` or `oneAPIBackend()` for GPU computations.
+
+The formula is given by:
+
+```math
+\psi_{p,l}(x,y,z) = N_{p,l} \alpha(z) \exp\left[-\frac{\alpha(z)r^2}{2} + i(2p+|l|)\arg(\alpha(z))\right] [\alpha(z)(X + i\text{sgn}(l)Y)]^{|l|} L_p^{|l|}(|\alpha(z)|^2 r^2)
+```
+
+where ``X = x/\gamma``, ``Y = y/\gamma``, ``\gamma = w/\sqrt{2}``, ``r^2 = X^2 + Y^2``, and ``\alpha(z) = 1/(1 + i2z/(kw^2))``.
+
 
 # Examples
 

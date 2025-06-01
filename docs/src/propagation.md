@@ -93,18 +93,4 @@ save_animation(abs2.(ψ), "kerr.mp4") #The beam colapses due to the self focusin
 
 ### References
 
-The package [NonlinearSchrodinger.jl](https://github.com/oashour/NonlinearSchrodinger.jl/tree/master) has more available solvers for this equation, but, as far as I can see, it only works with one spatial dimensional. Its author has also written [a paper](https://arxiv.org/abs/2103.14469) that explains the theory that goes behind the numerical solution.
-
-## CUDA support
-
-Both `free_propagation` and `kerr_propagation` can be run on Nvidia GPUs, which will greatly improve the performance of these functions. If you have one, you simply need to convert your initial profile to a `CuArray` and pass this converted array to the propagation methods (check the [CUDA.jl documentation](https://cuda.@examplegpu.org/stable/) for more details). Then, [multiple dispatch](https://docs.@examplelang.org/en/v1/manual/methods/#Methods) will do its magic!
-
-Here is an example:
-```julia
-using StructuredLight, CairoMakie
-using CUDA #It is necessary to load the CUDA package
-
-ψ₀ = lg(rs,rs) |> cu #Transfers array to GPU
-
-ψ = free_propagation(ψ₀,rs,rs,zs) #This is running on the GPU!
-```
+The package [NonlinearSchrodinger.jl](https://github.com/oashour/NonlinearSchrodinger.jl/tree/master) has more available solvers for this equation, but, as far as I can see, it only works with one spatial dimensional. Its author has also written [a paper](https://arxiv.org/abs/2103.14469) that explains the theory that goes behind the numerical solution. I have also written the package [GeneralizedGrossPitaevskii.jl](https://github.com/marcsgil/GeneralizedGrossPitaevskii.jl) that implements the propagation described by a generalized Gross-Pitaevskii equation over arbitrary dimensions.

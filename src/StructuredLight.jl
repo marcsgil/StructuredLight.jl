@@ -12,9 +12,8 @@ using DispatchDoctor
     export overlap
 
     include("ortho_poly.jl")
-    export laguerre, hermite
 
-    include("initial_profiles.jl")
+    include("beam_profiles.jl")
     export hg!, hg, normalization_hg, diagonal_hg, diagonal_hg!, lg!, lg, normalization_lg,
         rectangular_apperture, square, single_slit, double_slit, pupil, triangle,
         linear_combination, grid_linear_combination!, grid_linear_combination
