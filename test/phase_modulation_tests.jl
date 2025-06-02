@@ -1,5 +1,5 @@
 if CUDA.functional()
-    @testset "Aberration Correction (CUDA)" begin
+    @testset "Phase Modulation (CUDA)" begin
         rs = LinRange(-3, 3, 3)
         u = hg(rs, rs)
 
@@ -8,10 +8,10 @@ if CUDA.functional()
 
         coeffs = (0.1, 0.2)
 
-        aberration_correction!(u, (f1, f2), coeffs, (rs, rs))
+        apply_phase!(u, (f1, f2), coeffs, (rs, rs))
 
         u_cuda = hg(rs, rs, backend=CUDABackend())
-        aberration_correction!(u_cuda, (f1, f2), coeffs, (rs, rs))
+        apply_phase!(u_cuda, (f1, f2), coeffs, (rs, rs))
         @test Array(u_cuda) ≈ Array(u)
     end
 end

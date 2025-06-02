@@ -1,6 +1,6 @@
 # Beam Profiles
 
-This package implements the Laguerre-Gauss modes (`lg`), the Hermite-Gauss modes (`hg`) and its diagonal version (`diagonal_hg`).
+This package implements the Laguerre-Gauss modes ([`lg`](@ref)), the Hermite-Gauss modes ([`hg`](@ref)) and its diagonal version ([`diagonal_hg`](@ref)).
 
 In all cases, one must specify the points or the grids over which the mode is calculated. The other beam parameters are specified through keyword arguments.
 
@@ -97,11 +97,112 @@ save_animation(abs2.(ψs),"prop_adjusted_k.mp4")
 
 ![](prop_adjusted_k.mp4)
 
-## Lenses
+## Aperture Functions & Beam Shaping
 
-We also implement lenses:
+StructuredLight.jl provides several aperture functions for beam shaping and diffraction studies. These functions return boolean arrays indicating which points are within the aperture geometry.
 
 ```@docs
-lens
-tilted_lens
+rectangular_apperture
+square
+single_slit
+double_slit
+pupil
+triangle
+```
+
+### Examples
+
+Basic rectangular aperture:
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-2, 2, 256)
+ys = LinRange(-2, 2, 256)
+aperture = rectangular_apperture(xs, ys, 1.5, 1.0)
+visualize(aperture)
+```
+
+Single slit diffraction setup:
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-3, 3, 256)
+ys = LinRange(-3, 3, 256)
+slit = single_slit(xs, ys, 0.5)
+visualize(slit)
+```
+
+Double slit interference:
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-4, 4, 256)
+ys = LinRange(-4, 4, 256)
+double_slits = double_slit(xs, ys, 0.3, 2.0)
+visualize(double_slits)
+```
+
+Circular pupil (common in optical systems):
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-2, 2, 256)
+ys = LinRange(-2, 2, 256)
+circular_aperture = pupil(xs, ys, 1.0)
+visualize(circular_aperture)
+```
+
+Beam shaping with apertures - applying aperture to Gaussian beam:
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-3, 3, 256)
+ys = LinRange(-3, 3, 256)
+gaussian_beam = hg(xs, ys)
+square_aperture = square(xs, ys, 2.0)
+shaped_beam = gaussian_beam .* square_aperture
+visualize(abs2.(shaped_beam))
+```
+
+## Advanced Beam Manipulation
+
+For creating complex beam patterns through superposition of multiple functions:
+
+```@docs
+linear_combination
+grid_linear_combination
+grid_linear_combination!
+```
+
+### Examples
+
+Creating a superposition of Hermite-Gaussian modes:
+```@example
+using StructuredLight, CairoMakie
+rs = LinRange(-3, 3, 100)
+grid = (rs, rs)
+
+# Define component functions
+f1(args) = hg(args..., m=1)
+f2(args) = hg(args..., n=1)
+
+funcs = (f1, f2)
+coeffs = (1/√2, im/√2)
+
+# This creates a Laguerre-Gaussian mode through HG superposition
+superposition = grid_linear_combination(funcs, coeffs, grid)
+visualize(abs2.(superposition), scaling=4)
+```
+
+Creating custom beam patterns with multiple components:
+```@example
+using StructuredLight, CairoMakie
+rs = LinRange(-4, 4, 128)
+grid = (rs, rs)
+
+# Define multiple beam components
+f1(args) = lg(args..., p=0, l=1)  # Vortex beam
+f2(args) = hg(args..., m=2, n=0)  # Hermite-Gaussian
+f3(args) = hg(args..., m=0, n=2)  # Another HG mode
+
+funcs = (f1, f2, f3)
+coeffs = (0.6, 0.3, 0.3)
+
+complex_beam = grid_linear_combination(funcs, coeffs, grid)
+visualize(abs2.(complex_beam), scaling=4)
 ```

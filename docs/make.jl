@@ -11,7 +11,7 @@ makedocs(
         "visualization.md",
         "propagation.md",
         "holograms.md",
-        "aberration_correction.md",
+        "phase_modulation.md",
         "gpu_support.md",
         "miscellany.md",
         "examples.md",

@@ -74,11 +74,6 @@ function radial_poly(ρ, m, n)
     (-1)^order * ρ^m * jacobi(1 - 2ρ^2, order, m, 0)
 end
 
-"""
-    zernike_polynomial(x, y, m, n)
-
-    Evaluate the `n` th Zernike polynomial at `(x, y)` with azimuthal order `m`.
-"""
 function zernike_polynomial(x::Number, y::Number, m, n)
     ρ = sqrt(x^2 + y^2)
     θ = atan(y, x)

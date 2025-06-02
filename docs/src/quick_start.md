@@ -4,7 +4,7 @@
 
 To install the `StructuredLight` package, you can use the Julia package manager. Open the Julia REPL type `]` to enter the package manager mode, and then run:
 
-```julia
+```julia-repl
     add StructuredLight
 ```
 

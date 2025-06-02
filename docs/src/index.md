@@ -7,7 +7,7 @@ Here is a brief overview of the main features:
 - **[Visualization](@ref)**: Tools for visualizing the beam profiles and their propagation.
 - **[Propagation](@ref)**: Simulate the propagation of beams in free space and in Kerr media.
 - **[Holograms](@ref)**: Compute holograms for generating structured light beams on SLMs.
-- **[Aberration Correction](@ref)**: Tools for correcting aberrations in structured light beams through phase masks and Zernike polynomials.
+- **[Phase Modulation](phase_modulation.md)**: Tools for applying phase modulation to structured light beams, including aberration correction, lens simulation, and custom phase masks using Zernike polynomials.
 - **[GPU Support](@ref)**: Efficient computation on Nvidia GPUs using CUDA.
 
 Check [Quick Start](@ref) for a quick introduction to the package.

@@ -12,9 +12,8 @@ d = f / √2
 w = √((2 + √2) * f / k)
 rs = LinRange(-4w, 4w, 512)
 zs = LinRange(0, 2d, 64)
-##
-ψ₀ = lg(rs, rs, -d; w, k, l=1, p=0)
-lens!(ψ₀, rs, rs, Inf, f; k) #Applies a cylindrical lens
+
+ψ₀ = lg(rs, rs, -d; w, k, l=1, p=0) .* lens(rs, rs, Inf, f; k)
 ψ₁ = free_propagation(ψ₀, rs, rs, 2d; k)
 ψs = free_propagation(ψ₀, rs, rs, zs; k)
 
@@ -32,32 +31,54 @@ using StructuredLight, CairoMakie
 
 w = 0.16e-3 #Waist
 λ = 632.8e-9 #Wavelength
-k = 2π/λ #Wavenumber
+k = 2π / λ #Wavenumber
 f = 50e-2 #Focal length of the lens
 
 z₀ = 3.1 #Distance away from the focus where the beam encounters the lens
 
-z_cr = z₀/(z₀/f-1) #Conversion distance
+z_cr = z₀ / (z₀ / f - 1) #Conversion distance
 
 ξ = deg2rad(6) #Tilting angle
 
 # Now, we set up our grid and the initial profile by including the action of a tilted lens:
-rs = LinRange(-70w,70w,1024)
-ψ₀ = lg(rs,rs,z₀,l=3; w, k)
-tilted_lens!(ψ₀,rs,rs,f,ξ;k) #Applies the lens
+rs = LinRange(-70w, 70w, 1024)
+ψ₀ = lg(rs, rs, z₀, l=3; w, k) .* tilted_lens(rs, rs, f, ξ; k) #Applies the lens
 
 # Finally, we propagate. 
 # Note that we introduce scalings, because, otherwise, the beam would be to small.
-zs = z_cr .* LinRange(.97,1.03,64)
-scalings = 0.015 .* vcat(LinRange(2.4,1,32),LinRange(1,2.4,32))
-ψ = free_propagation(ψ₀,rs,rs,zs,k=k,scalings)
-anim = save_animation(abs2.(ψ),"tilted_lens.mp4",framerate=12)
+zs = z_cr .* LinRange(0.97, 1.03, 64)
+scalings = 0.015 .* vcat(LinRange(2.4, 1, 32), LinRange(1, 2.4, 32))
+ψ = free_propagation(ψ₀, rs, rs, zs, k=k, scalings)
+anim = save_animation(abs2.(ψ), "tilted_lens.mp4", framerate=12)
 nothing # hide
 ```
 
 ![](tilted_lens.mp4)
 
 By changing the initial angular momentum, one obtains different HG modes.
+
+## Diffraction of vortices through a triangular aperture
+
+See B. Pinheiro da Silva, G. H. dos Santos, A. G. de Oliveira, N. Rubiano da Silva, W. T. Buono, R. M. Gomes, W. C. Soares, A. J. Jesus-Silva, E. J. S. Fonseca, P. H. Souto Ribeiro, and A. Z. Khoury, "Observation of a triangular-lattice pattern in nonlinear wave mixing with optical vortices," Optica 9, 908-912 (2022)
+
+```@example
+using StructuredLight, CairoMakie
+xs = LinRange(-16, 16, 512)
+ys = LinRange(-16, 16, 512)
+zs = LinRange(0, 0.6, 64)
+
+# Create initial beam with triangular aperture
+initial_beam = lg(xs, ys, l=3)
+triangular_mask = triangle(xs, ys, 3.0)
+shaped_initial = initial_beam .* triangular_mask
+
+# Propagate the shaped beam
+propagated = free_propagation(shaped_initial, xs, ys, zs)
+save_animation(abs2.(propagated), "shaped_beam_prop.mp4")
+nothing # hide
+```
+
+![](shaped_beam_prop.mp4)
 
 ## Diffraction Rings in Kerr Media
 

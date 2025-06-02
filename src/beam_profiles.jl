@@ -28,7 +28,7 @@ end
 
 Compute a Hermite-Gaussian mode.
 
-`x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
+`x`, `y` and `z` can be numbers or collections, but `x` and `y` must be always of the same kind.
 
 # Other Arguments:
 
@@ -141,7 +141,7 @@ end
 
 Compute a Laguerre-Gaussian mode.
 
-`x`, `y` and `z` can be numbers or vectors, but `x` and `y` must be always of the same kind.
+`x`, `y` and `z` can be numbers or collections, but `x` and `y` must be always of the same kind.
 
 # Other Arguments:
 
@@ -336,7 +336,6 @@ end
 Compute a linear combination of functions `funcs` with coefficients `coeffs` evaluated at `arg`.
 
 ```jldoctest
-
 f(x) = x^2
 g(x) = x
 

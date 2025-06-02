@@ -99,6 +99,7 @@ abstract type HologramMethod end
 
 A hologram generation method based on the inverse of the BesselJ1 function. 
 Corresponds to method of 3 of [1] and F of [2].
+Better quality than [`Simple`](@ref) for most cases, but less efficient in terms of output power.
 
 See also [`Simple`](@ref).
 
@@ -119,6 +120,7 @@ struct BesselJ1 <: HologramMethod end
 
 A hologram generation with a naive amplitude modulation.
 Method of 3 of [1] and F of [2].
+Better efficiency in terms of output power than [`BesselJ1`](@ref), but lower quality.
 
 See also [`BesselJ1`](@ref).
 
@@ -181,11 +183,11 @@ end
 Returns a hologram built from the `relative` field, using the specified `method`.
 
 # Arguments
-- `relative`: a matrix of complex numbers representing the relative field. This is the division of the field one wishes to produce divided by the field that arrives at the hologram plane.
+- `relative`: a matrix of complex numbers representing the relative field. This is the field one wishes to produce divided by the field that arrives at the hologram plane.
 
-- `two_pi_modulation`: the value of the modulation level that produces a modulation of 2π. Check your SLM specifications to see what this value should be.
+- `two_pi_modulation`: an integer between 0 and 255 the representing modulation level that produces a phase shift of 2π. Check your SLM specifications to see what this value should be.
 
-- `x_period` and `y_period` are the periods, in units of pixels, of the hologram in the x and y directions.
+- `x_period` and `y_period` are the periods, in units of pixels, of the diffraction grating in the x and y directions. This is used to spatially separate the modulated beam (first order diffraction) from the unmodulated beam (zero order diffraction).
 
 The avaliable methods are [`BesselJ1`](@ref) and [`Simple`](@ref).
 

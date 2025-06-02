@@ -18,4 +18,4 @@ include("normalization_tests.jl")
 
 include("shapes_test.jl")
 
-include("aberration_correction_tests.jl")
+include("phase_modulation_tests.jl")

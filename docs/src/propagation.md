@@ -39,6 +39,8 @@ zs = LinRange(0,1,64)
 ψs = free_propagation(ψ₀,rs,rs,zs)
 
 save_animation(abs2.(ψs), "lg_times_sin.mp4")
+
+nothing # hide
 ```
 
 ![](lg_times_sin.mp4)
@@ -59,6 +61,8 @@ scalings = @. √(1 + 4 * zs^2) #Here, we introduce the scalings given by w(z)/w
 #Note that the scalings compensate the diffraction of the beam.
 #Therefore, the animation seems still.
 save_animation(abs2.(ψs), "standing_still.mp4")
+
+nothing # hide
 ```
 
 ![](standing_still.mp4)
@@ -86,6 +90,8 @@ zs = LinRange(0,.12,32) #The z grid
 ψ = kerr_propagation(ψ₀,rs,rs,zs,512,g=200)
 
 save_animation(abs2.(ψ), "kerr.mp4") #The beam colapses due to the self focusing effect
+
+nothing # hide
 ```
 
 ![](kerr.mp4)
