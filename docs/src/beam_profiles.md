@@ -8,6 +8,7 @@ In all cases, one must specify the points or the grids over which the mode is ca
 
 ```@docs
 lg
+lg!
 normalization_lg
 ```
 
@@ -28,7 +29,7 @@ rs = LinRange(-5,5,256)
 zs = LinRange(0,1,32)
 ψs = lg(rs,rs,zs) 
 save_animation(abs2.(ψs),"prop_fundamental.mp4")
-return nothing # hide
+nothing # hide
 ```
 
 ![](prop_fundamental.mp4)
@@ -40,7 +41,7 @@ rs = LinRange(-5,5,256)
 zs = LinRange(0,1,32)
 ψs = lg(rs,rs,zs,p=1,l=-2)
 save_animation(abs2.(ψs),"prop_p=1,l=-2.mp4")
-return nothing # hide
+nothing # hide
 ```
 
 ![](prop_p=1,l=-2.mp4)
@@ -50,6 +51,7 @@ return nothing # hide
 
 ```@docs
 hg
+hg!
 normalization_hg
 ```
 
@@ -62,6 +64,7 @@ rs = LinRange(-6,6,256)
 zs = LinRange(0,.5,32)
 ψs = hg(rs,rs,zs,m=1,n=2,w=.4)
 save_animation(abs2.(ψs),"prop_adjusted_waist.mp4")
+nothing # hide
 ```
 
 ![](prop_adjusted_waist.mp4)
@@ -74,6 +77,7 @@ zs = LinRange(-.5,.7,128)
 ψ₀ = hg(rs,rs) + hg(rs,rs,n=2)/√2
 ψs = free_propagation(ψ₀,rs,rs,zs)
 save_animation(abs2.(ψs),"prop_backwards.mp4")
+nothing # hide
 ```
 
 ![](prop_backwards.mp4)
@@ -82,6 +86,7 @@ save_animation(abs2.(ψs),"prop_backwards.mp4")
 
 ```@docs
 diagonal_hg
+diagonal_hg!
 ```
 
 ### Examples
@@ -93,6 +98,7 @@ rs = LinRange(-5,5,256)
 zs = LinRange(0,1,32)
 ψs = diagonal_hg(rs,rs,zs,m=4,n=3,k=2)
 save_animation(abs2.(ψs),"prop_adjusted_k.mp4")
+nothing # hide
 ```
 
 ![](prop_adjusted_k.mp4)
@@ -102,7 +108,7 @@ save_animation(abs2.(ψs),"prop_adjusted_k.mp4")
 StructuredLight.jl provides several aperture functions for beam shaping and diffraction studies. These functions return boolean arrays indicating which points are within the aperture geometry.
 
 ```@docs
-rectangular_apperture
+rectangular_aperture
 square
 single_slit
 double_slit
@@ -117,7 +123,7 @@ Basic rectangular aperture:
 using StructuredLight, CairoMakie
 xs = LinRange(-2, 2, 256)
 ys = LinRange(-2, 2, 256)
-aperture = rectangular_apperture(xs, ys, 1.5, 1.0)
+aperture = rectangular_aperture(xs, ys, 1.5, 1.0)
 visualize(aperture)
 ```
 

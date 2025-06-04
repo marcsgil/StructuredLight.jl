@@ -1,19 +1,19 @@
 using Test
 
-# Test rectangular_apperture
-@testset "rectangular_apperture" begin
+# Test rectangular_aperture
+@testset "rectangular_aperture" begin
     x_inside = [0.0, 0.5]
     y_inside = [0.0, 0.5]
     x_outside = [1.0, -1.0]
     y_outside = [1.0, -1.0]
     a, b = 1.0, 1.0
 
-    @test all(rectangular_apperture(x_inside, y_inside, a, b))
-    @test !any(rectangular_apperture(x_outside, y_outside, a, b))
+    @test all(rectangular_aperture(x_inside, y_inside, a, b))
+    @test !any(rectangular_aperture(x_outside, y_outside, a, b))
 
     x = LinRange(-1.0, 1.0, 10)
     y = LinRange(-1.0, 1.0, 20)
-    result = rectangular_apperture(x, y, a, b)
+    result = rectangular_aperture(x, y, a, b)
     @test size(result) == (10, 20)
 end
 

@@ -1,10 +1,10 @@
 # Visualization
 
-This package offer tools that help the visualization of the generated beams.
+This package offer tools that help the visualization of the generated beams. They are built on top of the [CairoMakie](https://docs.makie.org/stable/) package, which is a powerful plotting library in Julia. It needs to be installed separately and loaded with `using CairoMakie` before using the visualization functions.
 
 ## `visualize` 
 
-The simplest of such tools is the `visualize` function, which displays the beam as a static image. It accepts two, three and four dimensional arrays.
+The simplest of such tools is the `visualize` function, which displays the beam as a static image. It accepts two, three and four dimensional arrays. The first two dimensions are interpreted as the spatial coordinates, the third dimension is interpreted as different rows of images, and the fourth dimension is interpreted as different columns of images.
 
 ```@docs
 visualize
@@ -30,11 +30,9 @@ visualize(abs2.(ψ₂)) #Displays ψ₂
 visualize(abs2.(ψ₃)) #Displays ψ₁ and ψ₂ in a row.
 ``` 
 
-With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form different kinds of animations. 
-
 ## `save_animation`
 
-`save_animation` will save the animation on the given path.
+With three-dimensional arrays, which are interpreted as a sequence of 2D images, we can also form animations. `save_animation` will save the animation on the given path. This is useful for visualizing the evolution of beams as they propagate through space or interact with different apertures.
 
 ```@docs
 save_animation

@@ -59,7 +59,7 @@ By changing the initial angular momentum, one obtains different HG modes.
 
 ## Diffraction of vortices through a triangular aperture
 
-See B. Pinheiro da Silva, G. H. dos Santos, A. G. de Oliveira, N. Rubiano da Silva, W. T. Buono, R. M. Gomes, W. C. Soares, A. J. Jesus-Silva, E. J. S. Fonseca, P. H. Souto Ribeiro, and A. Z. Khoury, "Observation of a triangular-lattice pattern in nonlinear wave mixing with optical vortices," Optica 9, 908-912 (2022)
+See [B. Pinheiro da Silva, G. H. dos Santos, A. G. de Oliveira, N. Rubiano da Silva, W. T. Buono, R. M. Gomes, W. C. Soares, A. J. Jesus-Silva, E. J. S. Fonseca, P. H. Souto Ribeiro, and A. Z. Khoury, "Observation of a triangular-lattice pattern in nonlinear wave mixing with optical vortices," Optica 9, 908-912 (2022)](https://opg.optica.org/optica/fulltext.cfm?uri=optica-9-8-908&id=488550)
 
 ```@example
 using StructuredLight, CairoMakie

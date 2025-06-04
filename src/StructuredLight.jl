@@ -15,7 +15,7 @@ using DispatchDoctor
 
     include("beam_profiles.jl")
     export hg!, hg, normalization_hg, diagonal_hg, diagonal_hg!, lg!, lg, normalization_lg,
-        rectangular_apperture, square, single_slit, double_slit, pupil, triangle,
+        rectangular_aperture, square, single_slit, double_slit, pupil, triangle,
         linear_combination, grid_linear_combination!, grid_linear_combination
 
     include("free_propagation.jl")

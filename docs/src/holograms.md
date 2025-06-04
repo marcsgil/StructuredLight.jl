@@ -8,6 +8,33 @@ Computer-generated holograms encode both amplitude and phase information of a de
 
 The basic idea is to take a complex field (which can be a superposition of different modes) and convert it into a phase pattern that can be displayed on an SLM. The hologram generation process involves calculating the phase shift required for each pixel to reconstruct the desired field at a specific distance.
 
+## Theoretical Background
+
+### Computer-Generated Holograms (CGHs)
+
+Computer-generated holograms solve a fundamental challenge in optics: how to display complex-valued optical fields (with both amplitude and phase information) on devices that can only modulate one parameter. Most spatial light modulators (SLMs) can only control phase, not amplitude.
+
+### The Phase-Only Constraint
+
+When we want to create a desired optical field ψ_target(x,y) = |ψ_target| exp(iφ_target), but our SLM can only apply phase modulation exp(iφ_SLM), we need to encode both amplitude and phase information into the phase pattern φ_SLM.
+
+### Holographic Encoding Methods
+
+CGHs work by adding a reference wave (carrier frequency) to the desired field. The interference between target and reference creates an intensity pattern that, when converted to phase, reconstructs the original field in specific diffraction orders:
+
+- **Zero order**: Unmodulated reference beam
+- **First order**: Desired reconstructed field  
+- **Higher orders**: Unwanted copies
+
+The period parameters x_period and y_period control the carrier frequency, determining the spatial separation between diffraction orders. Proper choice of these parameters ensures the desired field is spatially separated from unwanted diffraction orders.
+
+### Amplitude Encoding Strategies
+
+The package implements two main approaches for encoding amplitude information:
+
+- **BesselJ1 Method**: Uses the inverse Bessel function relationship between phase modulation depth and first-order diffraction efficiency
+- **Simple Method**: Direct amplitude-to-phase mapping with blazed grating, simpler but less efficient
+
 Here's a simple example of how to generate a hologram for a Laguerre-Gaussian beam:
 ```@example
 using StructuredLight, CairoMakie

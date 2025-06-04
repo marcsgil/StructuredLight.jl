@@ -1,7 +1,7 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
-authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
 version = "0.7.0"
+authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
 
 [deps]
 Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"

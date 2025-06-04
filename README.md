@@ -3,45 +3,69 @@
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://marcsgil.github.io/StructuredLight.jl)
 [![CI](https://github.com/marcsgil/StructuredLight.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/marcsgil/StructuredLight.jl/actions/workflows/CI.yml)
 
-This package provides tools to simulate the propagation of paraxial light beams. This includes the calculation of Laguerre-Gauss and Hermite-Gauss beam profiles, the action of lenses, the propagation in free space as well as in Kerr media. We also provide methods that help the visualization of such beams.
+A comprehensive Julia package for simulating, manipulating, and visualizing spatially structured light beams. StructuredLight.jl provides efficient tools for paraxial beam propagation, including specialized functions for generating structured modes, simulating optical elements, and creating computer-generated holograms for spatial light modulators.
 
-You can install this package by hitting `]` to enter the Pkg REPL-mode and then typing
+## Features
 
-```
-add StructuredLight
-```  
-## Example
+- **Beam Profiles**: Generate Laguerre-Gauss and Hermite-Gauss modes, diagonal Hermite-Gauss modes, and various aperture shapes
+- **Free Space Propagation**: Simulate beam propagation using fast Fourier transforms
+- **Nonlinear Propagation**: Kerr effect simulation for nonlinear media
+- **Computer-Generated Holograms**: Create phase patterns for spatial light modulators with multiple algorithms
+- **Phase Modulation**: Apply lenses, tilted lenses, and aberration correction using Zernike polynomials
+- **Linear Combinations**: Efficiently compute superpositions of structured modes
+- **GPU Acceleration**: Full CUDA support for high-performance computations
+- **Visualization**: Comprehensive plotting tools via Makie.jl extension
 
-The following code is a minimal working example for this package:
+## Installation
 
 ```julia
-using StructuredLight #Loads the package
-
-rs = LinRange(-5,5,256) #Define a linear grid of points
-
-E0 = lg(rs,rs) #Calculates the fundamental Laguerre-Gaussian mode
-
-visualize(E0) #visualizes the mode
-
-E = free_propagation(E0,rs,rs,1) #Propagates the mode through a distance of z=1
-
-visualize(E) #visualizes the evolved mode
+using Pkg
+Pkg.add("StructuredLight")
 ```
 
-This illustrates the basic idea of the package: first, you construct a matrix representing the mode you want to propagate, and then one calls `free_propagation`.
+## Quick Start
 
-## CUDA support
+```julia
+using StructuredLight
 
-The propagation can be done on Nvidia GPUs. One only needs to pass the initial profile as a `CuArray`.
+# Create a spatial grid
+rs = LinRange(-5, 5, 256)
 
+# Generate fundamental Gaussian mode
+E0 = lg(rs, rs)
+
+# Visualize the beam intensity
+visualize(abs2.(E0))
+
+# Propagate through free space
+E_propagated = free_propagation(E0, rs, rs, 1.0)
+```
+
+## Advanced Examples
+
+### GPU Acceleration
 ```julia
 using CUDA
 
-E0 = lg(rs,rs) |> cu #Transfers array to gpu
-
-E = free_propagation(E0,rs,rs,zs)
+# Transfer to GPU for faster computation
+E0_gpu = lg(rs, rs) |> cu
+E_propagated = free_propagation(E0_gpu, rs, rs, 1.0)
 ```
 
-## Perspectives
+### Computer-Generated Holograms
+```julia
+# Create a hologram for an SLM
+target_field = lg(rs, rs, p=1, l=2)  # LG mode
+hologram = generate_hologram(target_field, 255, 20, 20)
+```
 
-Currently, I'm studying the propagation of light in media with second order non-linearity and through turbulence. Depending on my advances, I may include functionalities covering these topics.
+## Compatibility
+
+- **Julia**: 1.10 - 1.11
+- **GPU Support**: CUDA.jl for NVIDIA GPUs
+- **Visualization**: Makie.jl ecosystem
+- **Documentation**: [Full documentation available](https://marcsgil.github.io/StructuredLight.jl)
+
+## Related Packages
+
+- [SpatialLightModulator.jl](https://github.com/marcsgil/SpatialLightModulator.jl): Interface with physical SLM devices

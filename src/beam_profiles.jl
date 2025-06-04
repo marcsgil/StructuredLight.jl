@@ -92,6 +92,11 @@ end
     dest[r, s, t] = hg(x[r], y[s], z[t]; θ, m, n, w, k, N)
 end
 
+"""
+    hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
+
+Same as [`hg`](@ref), but writes the result to `dest`.
+"""
 function hg!(dest, x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
     backend = get_backend(dest)
     kernel! = hg_kernel!(backend)
@@ -108,6 +113,11 @@ function hg(x, y, z=zero(eltype(x)); θ=zero(eltype(x)), m=0, n=0, w=one(eltype(
     dest
 end
 
+"""
+    diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w))
+
+Same as [`diagonal_hg`](@ref), but writes the result to `dest`.
+"""
 diagonal_hg!(dest, x, y, z=zero(eltype(x)); m=0, n=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_hg(m, n, w)) = hg!(dest, x, y, z; θ=π / 4, m, n, w, k, N)
 
 """
@@ -205,6 +215,11 @@ end
     dest[r, s, t] = lg(x[r], y[s], z[t]; p, l, w, k, N)
 end
 
+"""
+    lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w))
+
+Same as [`lg`](@ref), but writes the result to `dest`.
+"""
 function lg!(dest, x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)), N=normalization_lg(p, l, w))
     backend = get_backend(dest)
     kernel! = lg_kernel!(backend)
@@ -221,7 +236,7 @@ function lg(x, y, z=zero(eltype(x)); p=0, l=0, w=one(eltype(x)), k=one(eltype(x)
 end
 
 """
-    rectangular_apperture(x, y, a, b)
+    rectangular_aperture(x, y, a, b)
 
 Determine if points (x, y) are within a rectangular aperture centered at the origin.
 The rectangle has width `a` and height `b`.
@@ -235,7 +250,7 @@ The rectangle has width `a` and height `b`.
 # Returns
 - A boolean array indicating whether each point is within the rectangular aperture.
 """
-function rectangular_apperture(x, y, a, b)
+function rectangular_aperture(x, y, a, b)
     @. abs(x) <= a / 2 && abs(y') <= b / 2
 end
 
@@ -254,7 +269,7 @@ The square has side length `l`.
 - A boolean array indicating whether each point is within the square aperture.
 """
 function square(x, y, l)
-    rectangular_apperture(x, y, l, l)
+    rectangular_aperture(x, y, l, l)
 end
 
 """
@@ -272,7 +287,7 @@ The slit has width `a` and extends infinitely in the y-direction.
 - A boolean array indicating whether each point is within the single slit aperture.
 """
 function single_slit(x, y, a)
-    rectangular_apperture(x, y, a, Inf)
+    rectangular_aperture(x, y, a, Inf)
 end
 
 """

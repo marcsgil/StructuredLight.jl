@@ -1,6 +1,6 @@
 # Propagation
 
-The heavy lifting in this package is done by the propagation methods. The basic principle is that you give an initial profile and the grid over which it was calculated, and we give back to you the propagated beam. For now, we have included propagation in free space (`free_propagation`) and in Kerr Media (`kerr_propagation`). The implementation of propagation in media with quadratic nonlinearity is on the horizon.
+This package provides a few propagation options. The basic principle is that you give an initial profile and the grid over which it was calculated, and we give back to you the propagated beam. For now, we have included propagation in free space (`free_propagation`) and in Kerr Media (`kerr_propagation`).
 
 ## `free_propagation`
 
@@ -72,6 +72,42 @@ nothing # hide
 The book "Schmidt, J. D. (2010). Numerical Simulation of Optical Wave Propagation with Examples in MATLAB. United States: SPIE." is a great resource to learn about numerical propagation of paraxial light beams
 
 ## `kerr_propagation`
+
+### Theoretical Background
+
+#### The Nonlinear Schrödinger Equation
+
+Kerr propagation describes how optical beams evolve in **nonlinear media** where the refractive index depends on the light intensity. This is governed by the **nonlinear Schrödinger equation (NLSE)**:
+
+```
+i ∂ψ/∂z + (1/2k) ∇²⊥ψ + g|ψ|²ψ = 0
+```
+
+where:
+- `ψ(x,y,z)` is the slowly-varying envelope of the optical field
+- `k` is the wavenumber 
+- `g` is the nonlinear coefficient (related to the Kerr nonlinearity)
+- `∇²` is the transverse Laplacian operator
+
+#### Physical Effects
+
+**Self-focusing**: In materials with positive Kerr nonlinearity (g > 0), regions of high intensity experience a higher refractive index, creating a "self-induced lens" that focuses the beam. This can lead to:
+
+- **Beam collapse**: Strong nonlinearity can cause catastrophic focusing
+- **Soliton formation**: Balance between diffraction and self-focusing creates stable pulses
+- **Filamentation**: Beam breakup into multiple filaments
+
+**Self-defocusing**: For negative Kerr nonlinearity (g < 0), high-intensity regions have lower refractive index, causing beam spreading.
+
+#### Numerical Implementation
+
+The `kerr_propagation` function uses a **split-step Fourier method**:
+
+1. **Linear step**: Apply diffraction in Fourier domain
+2. **Nonlinear step**: Apply self-phase modulation in real space
+3. **Repeat**: Alternate steps for small z increments
+
+The `g` parameter controls the nonlinear strength: larger values lead to stronger self-focusing effects.
 
 ```@docs
 kerr_propagation

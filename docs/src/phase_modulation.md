@@ -2,6 +2,32 @@
 
 The phase modulation tools in StructuredLight.jl provide a flexible framework for simulating optical elements, correcting aberrations, and implementing custom phase patterns commonly used in adaptive optics, spatial light modulator applications, and structured light generation. This includes simulating optical elements like lenses, correcting aberrations, and applying custom phase masks. The phase modulation framework is general-purpose and can be used for any application requiring spatially-varying phase modifications.
 
+## Physical Background
+
+### What is Phase Modulation?
+
+Phase modulation involves spatially varying the phase of an optical field while preserving its amplitude. When light with complex amplitude ψ(x,y) encounters a phase modulating element, the transmitted field becomes:
+
+ψ_out(x,y) = ψ_in(x,y) × exp(iφ(x,y))
+
+where φ(x,y) is the spatially-varying phase function introduced by the optical element.
+
+### Applications and Physical Significance
+
+- **Focusing and defocusing**: Lenses introduce quadratic phase profiles that focus or diverge light
+- **Aberration correction**: Zernike polynomials represent common optical aberrations in adaptive optics systems
+- **Beam steering**: Linear phase gradients deflect beams to different angles
+- **Wavefront shaping**: Custom phase patterns can create complex intensity distributions
+- **Adaptive optics**: Real-time phase correction compensates for atmospheric turbulence
+
+### Mathematical Framework
+
+The phase modulation functions in this package implement standard optical transformations:
+
+- **Thin lens**: φ(x,y) = -k(x²/2fx + y²/2fy) where fx, fy are focal lengths
+- **Zernike aberrations**: φ(x,y) = Σ aᵢ Zᵢ(ρ,θ) for aberration coefficients aᵢ
+- **Custom patterns**: Linear combinations of basis functions for complex wavefront control
+
 ## Optical Elements
 
 ### Lenses
