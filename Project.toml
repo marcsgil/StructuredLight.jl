@@ -1,7 +1,7 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
-version = "0.7.0"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
+version = "0.7.0"
 
 [deps]
 Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
@@ -25,7 +25,7 @@ CUDA = "5"
 DispatchDoctor = "0.4"
 FFTW = "1"
 KernelAbstractions = "0.8 - 0.9"
-Makie = "0.21"
+Makie = "0.21, 0.22"
 PrecompileTools = "1"
 julia = "1.10 - 1.12"
 
