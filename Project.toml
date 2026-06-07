@@ -1,6 +1,6 @@
 name = "StructuredLight"
 uuid = "13204c95-a6e5-4c09-8c7b-ee09b09e0944"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
 
 [deps]
